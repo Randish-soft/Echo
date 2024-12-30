@@ -1,42 +1,288 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+/* Landing page container */
+.landing-page {
+  font-family: 'Arial', sans-serif;
+  color: #333;
+  margin: 0;
+  padding: 0;
+  background-color: #fefefe;
+}
+
+/* Navbar */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background-color: #fff;
+  border-bottom: 1px solid #ccc;
+}
+
+.brand {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.nav-right {
+  display: flex;
+  gap: 1rem;
+}
+
+.nav-btn {
+  background-color: transparent;
+  border: 1px solid #333;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-size: 0.9rem;
+}
+
+.nav-btn:hover {
+  background-color: #333;
+  color: #fff;
+}
+
+.signup-btn {
+  background-color: #333;
+  color: #fff;
+}
+
+/* Hero Section */
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  background: #fafafa;
   text-align: center;
+  border-bottom: 1px solid #ccc;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.hero-content {
+  max-width: 600px;
+  padding: 0 1rem;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.hero-title {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.hero-subtitle {
+  font-size: 1.2rem;
+  margin-bottom: 1.5rem;
 }
 
-.card {
-  padding: 2em;
+.cta-btn {
+  background-color: #333;
+  color: #fff;
+  padding: 0.8rem 1.2rem;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s;
 }
 
-.read-the-docs {
-  color: #888;
+.cta-btn:hover {
+  background-color: #555;
+}
+
+/* Color classes */
+.text-red {
+  color: #EE3838;
+}
+
+.text-green {
+  color: #3A9B3A;
+}
+
+.text-teal {
+  color: #0EB8BE;
+}
+
+/* Asterisk and API color */
+.asterisk {
+  color: #B76319;
+}
+
+.api-color {
+  color: #F529E8;
+}
+
+/* Info Section */
+.info-section {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 2rem;
+  gap: 2rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.code-tree-container {
+  flex: 1 1 300px;
+  max-width: 400px;
+  overflow: auto;
+}
+
+.code-tree {
+  background-color: #2e2e2e;
+  color: #ccc;
+  padding: 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.info-text {
+  flex: 1 1 300px;
+  max-width: 500px;
+  line-height: 1.6;
+}
+
+.info-text h3 {
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.info-text p {
+  margin-bottom: 1rem;
+}
+
+.note {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* MODAL OVERLAY */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* semi-transparent background */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999; /* on top of everything */
+}
+
+/* MODAL CONTENT */
+.modal-content {
+  background-color: #fff;
+  padding: 2rem;
+  max-width: 400px;
+  width: 90%;
+  border-radius: 8px;
+  position: relative;
+}
+
+/* CLOSE BUTTON (top-right 'X') */
+.close-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+/* Thank You Section */
+.thank-you-section {
+  padding: 0.6rem;
+  border-radius: 4px;
+  margin-bottom: 0.6rem;
+  text-align: center;
+  background-color: transparent; /* optional */
+}
+
+.thank-you-text {
+  margin: 0;
+  color: #0EB8BE;
+  font-size: 0.95rem;
+}
+
+/* Sign-up Form */
+.signup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.signup-label {
+  font-size: 0.85rem;
+  margin-bottom: 0.2rem;
+}
+
+.signup-input {
+  padding: 0.3rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  border: 1px solid #ccc;
+}
+
+.required-asterisk {
+  color: red;
+}
+
+.remember-me-container {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.remember-me-checkbox {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.remember-me-label {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.password-criteria {
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+}
+
+.criteria-title {
+  margin-bottom: 0.3rem;
+  font-weight: bold;
+}
+
+.criteria-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.2rem;
+}
+
+.criteria-checkbox {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+.criteria-label {
+  margin-left: 0.3rem;
+  font-size: 0.85rem;
+}
+
+/* Error text under fields */
+.error-text {
+  color: red;
+  font-size: 0.75rem;
+  margin: 0;
+}
+
+/* Submit Button */
+.submit-btn {
+  background-color: black;
+  font-size: 0.85rem;
+  padding: 0.5rem 1rem;
+  margin-top: 0.4rem;
 }

@@ -1,13 +1,47 @@
 services:
+  # 1) Database service first
+  db:
+    image: postgres:15
+    container_name: my_postgres_db
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mydb
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  # 2) Backend depends on the db
+  backend:
+    build:
+      context: ./be
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./be:/app
+      - /app/node_modules
+    depends_on:
+      - db
+    environment:
+      - PORT=5000
+      - JWT_SECRET=supersecretkey123
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/mydb
+
+  # 3) Frontend depends on the backend
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
+      context: ./fe
+      dockerfile: Dockerfile
     ports:
       - "5173:5173"
     volumes:
-      - ./frontend:/app
+      - ./fe:/app
       - /app/node_modules
     environment:
-      - VITE_API_BASE_URL=http://localhost:5000  # Example env var if needed
+      - VITE_API_BASE_URL=http://localhost:5000
     command: npm run dev -- --host 0.0.0.0
+    depends_on:
+      - backend
