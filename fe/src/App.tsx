@@ -111,7 +111,7 @@ function App() {
             return alert('Please meet all password criteria.');
         }
 
-        // Send data to your backend
+        // Send data to your be
         try {
             const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/signup`, {
                 method: 'POST',
