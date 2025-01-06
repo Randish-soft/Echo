@@ -1,9 +1,13 @@
-// be/src/auth/authRouter.ts
+// src/auth/authRouter.ts
 import { Router } from "express";
-import { signupHandler } from "./signup/something";
+import { signupHandler } from "./signup/something";  // only signupHandler
 
-const authRouter = Router(); // Use Router, not express()
+const authRouter = Router();
 
-authRouter.post("/signup", signupHandler); // Correctly attach the handler
+// POST /auth/signup
+authRouter.post("/signup", signupHandler);
+
+// No verify route since we removed email logic
+// authRouter.get("/verify", verifyHandler);
 
 export default authRouter;

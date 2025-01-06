@@ -1,22 +1,20 @@
-import express from "express";
-import cors from "cors";
-import authRouter from "./auth/authRouter";  // note the relative path
+// src/server.ts
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import authRouter from './auth/authRouter';
 
+dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Enable CORS for development:
 app.use(cors());
-
-// Parse JSON bodies:
 app.use(express.json());
 
-// Use the auth routes:
-app.use("/auth", authRouter);
+app.use('/auth', authRouter);
 
-// A quick test route:
-app.get("/", (req, res) => {
-    res.send("Hello, TypeScript World!");
+app.get('/', (req, res) => {
+    res.send('Hello, TypeScript World!');
 });
 
 app.listen(PORT, () => {

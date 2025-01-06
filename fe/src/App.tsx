@@ -1,21 +1,42 @@
-// src/App.tsx
-
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './App.css';
 
+// A helper function to decode a JWT
+function parseJwt(token: string) {
+    try {
+        const base64Payload = token.split('.')[1];
+        const payload = Buffer.from(base64Payload, 'base64').toString();
+        return JSON.parse(payload);
+    } catch (e) {
+        console.error('Failed to parse token', e);
+        return null;
+    }
+}
+
 function App() {
+    const navigate = useNavigate();
+
     // Whether the sign-up modal is open
     const [isSignUpOpen, setIsSignUpOpen] = useState(false);
+    // Whether the login modal is open
+    const [isLoginOpen, setIsLoginOpen] = useState(false);
 
-    // Form fields
+    // Logged-in user info:
+    const [loggedInUser, setLoggedInUser] = useState<string | null>(null);
+
+    // ====== SIGN-UP FORM FIELDS ======
     const [email, setEmail] = useState('');
-    const [emailError, setEmailError] = useState(''); // track email errors
+    const [emailError, setEmailError] = useState('');
+
+    const [username, setUsername] = useState('');
+    const [usernameError, setUsernameError] = useState('');
 
     const [password, setPassword] = useState('');
-    const [passwordError, setPasswordError] = useState(''); // track password errors
+    const [passwordError, setPasswordError] = useState('');
 
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [confirmPasswordError, setConfirmPasswordError] = useState(''); // track confirm password errors
+    const [confirmPasswordError, setConfirmPasswordError] = useState('');
 
     const [rememberMe, setRememberMe] = useState(false);
 
@@ -25,17 +46,37 @@ function App() {
     const [hasNumber, setHasNumber] = useState(false);
     const [hasSpecialChar, setHasSpecialChar] = useState(false);
 
-    // Open/close modal
-    const handleOpenSignUp = () => setIsSignUpOpen(true);
+    // ====== LOGIN FORM FIELDS (username + password) ======
+    const [loginUsername, setLoginUsername] = useState('');
+    const [loginPassword, setLoginPassword] = useState('');
+
+    // On mount, check if a token is stored in localStorage
+    useEffect(() => {
+        const token = localStorage.getItem('myAppToken');
+        if (token) {
+            const decoded = parseJwt(token);
+            if (decoded && decoded.username) {
+                setLoggedInUser(decoded.username);
+            }
+        }
+    }, []);
+
+    // ====== SIGN-UP MODAL FUNCTIONS ======
+    const handleOpenSignUp = () => {
+        setIsSignUpOpen(true);
+        setIsLoginOpen(false);
+    };
     const handleCloseSignUp = () => {
         // Clear fields/state when closing
         setEmail('');
+        setUsername('');
         setPassword('');
         setConfirmPassword('');
         setRememberMe(false);
 
         // Reset errors
         setEmailError('');
+        setUsernameError('');
         setPasswordError('');
         setConfirmPasswordError('');
 
@@ -48,7 +89,18 @@ function App() {
         setIsSignUpOpen(false);
     };
 
-    // Validate email on blur
+    // ====== LOGIN MODAL FUNCTIONS ======
+    const handleOpenLogin = () => {
+        setIsLoginOpen(true);
+        setIsSignUpOpen(false);
+    };
+    const handleCloseLogin = () => {
+        setLoginUsername('');
+        setLoginPassword('');
+        setIsLoginOpen(false);
+    };
+
+    // ====== VALIDATIONS ======
     const validateEmail = (value: string) => {
         setEmail(value);
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -59,16 +111,22 @@ function App() {
         }
     };
 
-    // Check password strength each time user types
+    const validateUsername = (value: string) => {
+        setUsername(value);
+        if (value.trim().length < 3) {
+            setUsernameError('Username must be at least 3 characters');
+        } else {
+            setUsernameError('');
+        }
+    };
+
     const handlePasswordChange = (value: string) => {
         setPassword(value);
-
         setHasMinLength(value.length >= 8);
         setHasUppercase(/[A-Z]/.test(value));
         setHasNumber(/[0-9]/.test(value));
         setHasSpecialChar(/[^A-Za-z0-9]/.test(value));
 
-        // "strong enough" error if criteria not met
         if (
             value.length > 0 &&
             (value.length < 8 ||
@@ -82,7 +140,6 @@ function App() {
         }
     };
 
-    // Confirm password on blur or change
     const handleConfirmPassword = (value: string) => {
         setConfirmPassword(value);
         if (value && value !== password) {
@@ -92,12 +149,18 @@ function App() {
         }
     };
 
-    // Sign-up submission
+    // ====== SIGN-UP SUBMISSION ======
     const handleSignUpSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (emailError || passwordError || confirmPasswordError) {
+        // Basic client-side checks
+        if (emailError || usernameError || passwordError || confirmPasswordError) {
             return alert('Please fix the errors before submitting.');
+        }
+
+        if (!username) {
+            setUsernameError('Username is required');
+            return;
         }
 
         // Check that passwords match
@@ -106,22 +169,23 @@ function App() {
             return;
         }
 
-        // Check that all password criteria are met
+        // Check password criteria
         if (!hasMinLength || !hasUppercase || !hasNumber || !hasSpecialChar) {
             return alert('Please meet all password criteria.');
         }
 
-        // Send data to your be
+        // POST to your backend /auth/signup
         try {
             const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/signup`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password, rememberMe }),
+                body: JSON.stringify({ email, username, password, rememberMe }),
             });
             const data = await response.json();
 
             if (response.ok) {
                 alert('Sign-up successful!');
+                navigate('/tutorial'); // optional
                 handleCloseSignUp();
             } else {
                 alert(`Sign-up failed: ${data.message || 'Unknown error'}`);
@@ -132,6 +196,42 @@ function App() {
         }
     };
 
+    // ====== LOGIN SUBMISSION (USERNAME + PASSWORD) ======
+    const handleLoginSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                // Now we're sending username + password to the server
+                body: JSON.stringify({ username: loginUsername, password: loginPassword }),
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                // e.g. server returns { token: "jwt-token-here", username: "bob" }
+                const { token, username } = data;
+
+                localStorage.setItem('myAppToken', token);
+                setLoggedInUser(username);
+                alert('Logged in successfully!');
+                handleCloseLogin();
+            } else {
+                alert(`Login failed: ${data.message || 'Unknown error'}`);
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Server error. Please try again.');
+        }
+    };
+
+    // ====== LOG OUT ======
+    const handleLogout = () => {
+        localStorage.removeItem('myAppToken');
+        setLoggedInUser(null);
+    };
+
     return (
         <div className="landing-page">
             {/* Header / Navigation */}
@@ -140,10 +240,23 @@ function App() {
                     <h1 className="brand">echo</h1>
                 </div>
                 <div className="nav-right">
-                    <button className="nav-btn">Log In</button>
-                    <button className="nav-btn signup-btn" onClick={handleOpenSignUp}>
-                        Sign Up
-                    </button>
+                    {loggedInUser ? (
+                        <>
+                            <span className="nav-username">Hello, {loggedInUser}!</span>
+                            <button className="nav-btn" onClick={handleLogout}>
+                                Log Out
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <button className="nav-btn" onClick={handleOpenLogin}>
+                                Log In
+                            </button>
+                            <button className="nav-btn signup-btn" onClick={handleOpenSignUp}>
+                                Sign Up
+                            </button>
+                        </>
+                    )}
                 </div>
             </header>
 
@@ -165,7 +278,7 @@ function App() {
             {/* Info / Feature Section */}
             <section className="info-section">
                 <div className="code-tree-container">
-          <pre className="code-tree">
+                    <pre className="code-tree">
 {`Project
 ├── fe
 │   └── src
@@ -182,7 +295,7 @@ function App() {
 │   └── init.sql
 └── docker-compose.yml
 `}
-          </pre>
+                    </pre>
                 </div>
                 <div className="info-text">
                     <h3>
@@ -190,8 +303,8 @@ function App() {
                         selected parts<span className="asterisk">*</span>
                     </h3>
                     <p className="note">
-                        <span className="asterisk">*</span> Code documentation and <span className="api-color">API</span> get their
-                        own special treatment
+                        <span className="asterisk">*</span> Code documentation and{' '}
+                        <span className="api-color">API</span> get their own special treatment
                     </p>
                 </div>
             </section>
@@ -204,12 +317,27 @@ function App() {
                             ×
                         </button>
 
-                        {/* Thank You Section */}
                         <div className="thank-you-section">
                             <p className="thank-you-text">Thank You for Thinking of Us &lt;3</p>
                         </div>
 
                         <form onSubmit={handleSignUpSubmit} className="signup-form">
+                            {/* Username Field */}
+                            <label htmlFor="username" className="signup-label">
+                                Username <span className="required-asterisk">*</span>
+                            </label>
+                            <input
+                                id="username"
+                                type="text"
+                                placeholder="Your username"
+                                value={username}
+                                required
+                                onBlur={(e) => validateUsername(e.target.value)}
+                                onChange={(e) => setUsername(e.target.value)}
+                                className="signup-input"
+                            />
+                            {usernameError && <p className="error-text">{usernameError}</p>}
+
                             {/* Email Field */}
                             <label htmlFor="email" className="signup-label">
                                 Email <span className="required-asterisk">*</span>
@@ -332,6 +460,65 @@ function App() {
                     </div>
                 </div>
             )}
+
+            {/* LOGIN MODAL (USERNAME + PASSWORD) */}
+            {isLoginOpen && (
+                <div className="modal-overlay" onClick={handleCloseLogin}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <button className="close-btn" onClick={handleCloseLogin}>
+                            ×
+                        </button>
+
+                        {/*
+        If you want a "Thank you" or some heading, do it here.
+        For example:
+      */}
+                        <div className="thank-you-section">
+                            <p className="thank-you-text">Welcome Back!</p>
+                        </div>
+
+                        <form onSubmit={handleLoginSubmit} className="login-form">
+                            {/* Username Field (similar style as sign-up) */}
+                            <label htmlFor="loginUsername" className="login-label">
+                                Username <span className="required-asterisk">*</span>
+                            </label>
+                            <input
+                                id="loginUsername"
+                                type="text"
+                                placeholder="Your username"
+                                value={loginUsername}
+                                required
+                                onChange={(e) => setLoginUsername(e.target.value)}
+                                className="login-input"
+                            />
+                            {/* If you have any loginUsernameError, display it like sign-up errors */}
+                            {/* {loginUsernameError && <p className="error-text">{loginUsernameError}</p>} */}
+
+                            {/* Password Field */}
+                            <label htmlFor="loginPassword" className="login-label">
+                                Password <span className="required-asterisk">*</span>
+                            </label>
+                            <input
+                                id="loginPassword"
+                                type="password"
+                                placeholder="Your password"
+                                value={loginPassword}
+                                required
+                                onChange={(e) => setLoginPassword(e.target.value)}
+                                className="login-input"
+                            />
+                            {/* If you have any loginPasswordError, display it here */}
+                            {/* {loginPasswordError && <p className="error-text">{loginPasswordError}</p>} */}
+
+                            {/* Submit/Login Button */}
+                            <button type="submit" className="cta-btn submit-btn">
+                                Log In
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 }
