@@ -17,15 +17,14 @@ function parseJwt(token: string) {
 function App() {
     const navigate = useNavigate();
 
-    // Whether the sign-up modal is open
+    // ===== MODAL STATES =====
     const [isSignUpOpen, setIsSignUpOpen] = useState(false);
-    // Whether the login modal is open
     const [isLoginOpen, setIsLoginOpen] = useState(false);
 
-    // Logged-in user info:
+    // ===== LOGGED-IN USER =====
     const [loggedInUser, setLoggedInUser] = useState<string | null>(null);
 
-    // ====== SIGN-UP FORM FIELDS ======
+    // ===== SIGN-UP FORM FIELDS =====
     const [email, setEmail] = useState('');
     const [emailError, setEmailError] = useState('');
 
@@ -46,7 +45,7 @@ function App() {
     const [hasNumber, setHasNumber] = useState(false);
     const [hasSpecialChar, setHasSpecialChar] = useState(false);
 
-    // ====== LOGIN FORM FIELDS (username + password) ======
+    // ===== LOGIN FORM FIELDS (username + password) =====
     const [loginUsername, setLoginUsername] = useState('');
     const [loginPassword, setLoginPassword] = useState('');
 
@@ -61,13 +60,13 @@ function App() {
         }
     }, []);
 
-    // ====== SIGN-UP MODAL FUNCTIONS ======
+    // ====== MODAL HANDLERS ======
     const handleOpenSignUp = () => {
         setIsSignUpOpen(true);
         setIsLoginOpen(false);
     };
     const handleCloseSignUp = () => {
-        // Clear fields/state when closing
+        // Clear sign-up fields
         setEmail('');
         setUsername('');
         setPassword('');
@@ -79,7 +78,6 @@ function App() {
         setUsernameError('');
         setPasswordError('');
         setConfirmPasswordError('');
-
         // Reset password checks
         setHasMinLength(false);
         setHasUppercase(false);
@@ -89,7 +87,6 @@ function App() {
         setIsSignUpOpen(false);
     };
 
-    // ====== LOGIN MODAL FUNCTIONS ======
     const handleOpenLogin = () => {
         setIsLoginOpen(true);
         setIsSignUpOpen(false);
@@ -100,7 +97,7 @@ function App() {
         setIsLoginOpen(false);
     };
 
-    // ====== VALIDATIONS ======
+    // ===== VALIDATIONS =====
     const validateEmail = (value: string) => {
         setEmail(value);
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -155,7 +152,8 @@ function App() {
 
         // Basic client-side checks
         if (emailError || usernameError || passwordError || confirmPasswordError) {
-            return alert('Please fix the errors before submitting.');
+            alert('Please fix the errors before submitting.');
+            return;
         }
 
         if (!username) {
@@ -163,35 +161,41 @@ function App() {
             return;
         }
 
-        // Check that passwords match
         if (password !== confirmPassword) {
             setConfirmPasswordError('Passwords do not match');
             return;
         }
 
-        // Check password criteria
         if (!hasMinLength || !hasUppercase || !hasNumber || !hasSpecialChar) {
-            return alert('Please meet all password criteria.');
+            alert('Please meet all password criteria.');
+            return;
         }
 
-        // POST to your backend /auth/signup
         try {
             const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/signup`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, username, password, rememberMe }),
             });
-            const data = await response.json();
+
+            // If the server doesn't send JSON or sends an error, this might fail
+            let data: any = {};
+            try {
+                data = await response.json();
+            } catch (err) {
+                console.error('Error parsing JSON:', err);
+            }
 
             if (response.ok) {
                 alert('Sign-up successful!');
-                navigate('/tutorial'); // optional
+                navigate('/tutorial'); // navigate after success
                 handleCloseSignUp();
             } else {
-                alert(`Sign-up failed: ${data.message || 'Unknown error'}`);
+                const msg = data.message || 'Unknown error';
+                alert(`Sign-up failed: ${msg}`);
             }
         } catch (error) {
-            console.error(error);
+            console.error('Sign-up error:', error);
             alert('Server error. Please try again.');
         }
     };
@@ -204,24 +208,35 @@ function App() {
             const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                // Now we're sending username + password to the server
                 body: JSON.stringify({ username: loginUsername, password: loginPassword }),
             });
-            const data = await response.json();
+
+            let data: any = {};
+            try {
+                data = await response.json();
+            } catch (jsonErr) {
+                console.error('Error reading JSON from login response:', jsonErr);
+            }
 
             if (response.ok) {
-                // e.g. server returns { token: "jwt-token-here", username: "bob" }
+                // e.g. { token: "jwt-token-here", username: "bob" }
                 const { token, username } = data;
+                if (!token || !username) {
+                    alert('Login failed: no token or username returned by server.');
+                    return;
+                }
 
                 localStorage.setItem('myAppToken', token);
                 setLoggedInUser(username);
                 alert('Logged in successfully!');
                 handleCloseLogin();
             } else {
-                alert(`Login failed: ${data.message || 'Unknown error'}`);
+                // We got a non-2xx response
+                const msg = data.message || 'Unknown error';
+                alert(`Login failed: ${msg}`);
             }
-        } catch (err) {
-            console.error(err);
+        } catch (error) {
+            console.error('Login error:', error);
             alert('Server error. Please try again.');
         }
     };
@@ -278,15 +293,14 @@ function App() {
             {/* Info / Feature Section */}
             <section className="info-section">
                 <div className="code-tree-container">
-                    <pre className="code-tree">
+          <pre className="code-tree">
 {`Project
 ├── fe
 │   └── src
 ├── be
 │   └── app
 │       └── Pages
-│          ├──App.tsx
-│          ├──LandingPage.tsx
+│          └──App.tsx
 │       └──CSS
 │          ├──Navbar.css
 │          ├──searchbar.css
@@ -295,7 +309,7 @@ function App() {
 │   └── init.sql
 └── docker-compose.yml
 `}
-                    </pre>
+          </pre>
                 </div>
                 <div className="info-text">
                     <h3>
@@ -469,16 +483,12 @@ function App() {
                             ×
                         </button>
 
-                        {/*
-        If you want a "Thank you" or some heading, do it here.
-        For example:
-      */}
                         <div className="thank-you-section">
                             <p className="thank-you-text">Welcome Back!</p>
                         </div>
 
                         <form onSubmit={handleLoginSubmit} className="login-form">
-                            {/* Username Field (similar style as sign-up) */}
+                            {/* Username Field */}
                             <label htmlFor="loginUsername" className="login-label">
                                 Username <span className="required-asterisk">*</span>
                             </label>
@@ -491,8 +501,6 @@ function App() {
                                 onChange={(e) => setLoginUsername(e.target.value)}
                                 className="login-input"
                             />
-                            {/* If you have any loginUsernameError, display it like sign-up errors */}
-                            {/* {loginUsernameError && <p className="error-text">{loginUsernameError}</p>} */}
 
                             {/* Password Field */}
                             <label htmlFor="loginPassword" className="login-label">
@@ -507,10 +515,7 @@ function App() {
                                 onChange={(e) => setLoginPassword(e.target.value)}
                                 className="login-input"
                             />
-                            {/* If you have any loginPasswordError, display it here */}
-                            {/* {loginPasswordError && <p className="error-text">{loginPasswordError}</p>} */}
 
-                            {/* Submit/Login Button */}
                             <button type="submit" className="cta-btn submit-btn">
                                 Log In
                             </button>
@@ -518,7 +523,6 @@ function App() {
                     </div>
                 </div>
             )}
-
         </div>
     );
 }

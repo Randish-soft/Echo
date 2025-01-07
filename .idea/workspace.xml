@@ -5,26 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="12d91834-8b4d-457b-a51e-20b85f1bba68" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/be/.env" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/fe/public/favicon.ico" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/fe/public/icon.ico" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/fe/public/icon.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/fe/src/SignedUp/freetier/CSS/doc.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/fe/src/SignedUp/freetier/Doc-creation-page.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/figma/create-your-First-doc.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/be/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/be/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/be/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/be/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/be/src/auth/authRouter.ts" beforeDir="false" afterPath="$PROJECT_DIR$/be/src/auth/authRouter.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/be/src/auth/signup/something.ts" beforeDir="false" afterPath="$PROJECT_DIR$/be/src/auth/signup/something.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/be/src/server.ts" beforeDir="false" afterPath="$PROJECT_DIR$/be/src/server.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/fe/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/fe/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/fe/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/src/App.css" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/App.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/src/main.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/main.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -123,7 +104,7 @@
       <workItem from="1736074488572" duration="7435000" />
       <workItem from="1736087437769" duration="598000" />
       <workItem from="1736094940755" duration="3600000" />
-      <workItem from="1736179312921" duration="1387000" />
+      <workItem from="1736179312921" duration="3391000" />
     </task>
     <servers />
   </component>

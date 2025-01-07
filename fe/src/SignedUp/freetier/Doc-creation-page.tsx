@@ -1,5 +1,6 @@
+// Doc-creation-page.tsx
 import React from 'react';
-
+import { useNavigate } from 'react-router-dom';  // <-- add this
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 interface DocItem {
@@ -9,6 +10,8 @@ interface DocItem {
 }
 
 const DocCreationPage: React.FC = () => {
+    const navigate = useNavigate(); // for navigation
+
     // Exactly 7 items
     const docItems: DocItem[] = [
         {
@@ -57,6 +60,12 @@ const DocCreationPage: React.FC = () => {
         alert('Logging out...');
     };
 
+    // This function will run when any card is clicked
+    const handleCardClick = () => {
+        // e.g. navigate to the link-GitHub page:
+        navigate('/github-link');
+    };
+
     return (
         <div className="container py-4">
             {/* HEADER */}
@@ -76,7 +85,7 @@ const DocCreationPage: React.FC = () => {
             <div className="row g-4">
                 {docItems.slice(0, 4).map((item, idx) => (
                     <div className="col-md-3" key={idx}>
-                        <div className="card h-100 text-center">
+                        <div className="card h-100 text-center" onClick={handleCardClick}>
                             <img
                                 src={item.imgSrc}
                                 alt={item.title}
@@ -98,7 +107,7 @@ const DocCreationPage: React.FC = () => {
                 <div className="col-md-1" />
                 {docItems.slice(4).map((item, idx) => (
                     <div className="col-md-3" key={idx}>
-                        <div className="card h-100 text-center">
+                        <div className="card h-100 text-center" onClick={handleCardClick}>
                             <img
                                 src={item.imgSrc}
                                 alt={item.title}
