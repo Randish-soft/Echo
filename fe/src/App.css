@@ -170,14 +170,17 @@
   z-index: 999; /* on top of everything */
 }
 
-/* MODAL CONTENT */
+/* MODAL CONTENT - entire pop-up is white */
+
 .modal-content {
-  background-color: #fff;
+  background-color: #ffffff !important;; /* Fully white pop-up */
   padding: 2rem;
   max-width: 400px;
   width: 90%;
   border-radius: 8px;
   position: relative;
+  /* Subtle box shadow for a “card” effect */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 /* CLOSE BUTTON (top-right 'X') */
@@ -198,7 +201,7 @@
   border-radius: 4px;
   margin-bottom: 0.6rem;
   text-align: center;
-  background-color: transparent; /* optional */
+  background-color: #fff; /* Also white, so it matches the modal card */
 }
 
 .thank-you-text {
@@ -282,7 +285,36 @@
 /* Submit Button */
 .submit-btn {
   background-color: black;
+  color: #fff;
   font-size: 0.85rem;
   padding: 0.5rem 1rem;
   margin-top: 0.4rem;
+  border: none;
+  border-radius: 4px;
+}
+
+/* Login Form (mirroring the sign-up form styles) */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.login-label {
+  font-size: 0.85rem;
+  margin-bottom: 0.2rem;
+}
+
+.login-input {
+  padding: 0.3rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  border: 1px solid #ccc;
+}
+
+/* Reuse .error-text for any error messages */
+.error-text {
+  color: red;
+  font-size: 0.75rem;
+  margin: 0;
 }

@@ -1,21 +1,41 @@
-// src/App.tsx
-
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './App.css';
 
-function App() {
-    // Whether the sign-up modal is open
-    const [isSignUpOpen, setIsSignUpOpen] = useState(false);
+// A helper function to decode a JWT
+function parseJwt(token: string) {
+    try {
+        const base64Payload = token.split('.')[1];
+        const payload = Buffer.from(base64Payload, 'base64').toString();
+        return JSON.parse(payload);
+    } catch (e) {
+        console.error('Failed to parse token', e);
+        return null;
+    }
+}
 
-    // Form fields
+function App() {
+    const navigate = useNavigate();
+
+    // ===== MODAL STATES =====
+    const [isSignUpOpen, setIsSignUpOpen] = useState(false);
+    const [isLoginOpen, setIsLoginOpen] = useState(false);
+
+    // ===== LOGGED-IN USER =====
+    const [loggedInUser, setLoggedInUser] = useState<string | null>(null);
+
+    // ===== SIGN-UP FORM FIELDS =====
     const [email, setEmail] = useState('');
-    const [emailError, setEmailError] = useState(''); // track email errors
+    const [emailError, setEmailError] = useState('');
+
+    const [username, setUsername] = useState('');
+    const [usernameError, setUsernameError] = useState('');
 
     const [password, setPassword] = useState('');
-    const [passwordError, setPasswordError] = useState(''); // track password errors
+    const [passwordError, setPasswordError] = useState('');
 
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [confirmPasswordError, setConfirmPasswordError] = useState(''); // track confirm password errors
+    const [confirmPasswordError, setConfirmPasswordError] = useState('');
 
     const [rememberMe, setRememberMe] = useState(false);
 
@@ -25,20 +45,39 @@ function App() {
     const [hasNumber, setHasNumber] = useState(false);
     const [hasSpecialChar, setHasSpecialChar] = useState(false);
 
-    // Open/close modal
-    const handleOpenSignUp = () => setIsSignUpOpen(true);
+    // ===== LOGIN FORM FIELDS (username + password) =====
+    const [loginUsername, setLoginUsername] = useState('');
+    const [loginPassword, setLoginPassword] = useState('');
+
+    // On mount, check if a token is stored in localStorage
+    useEffect(() => {
+        const token = localStorage.getItem('myAppToken');
+        if (token) {
+            const decoded = parseJwt(token);
+            if (decoded && decoded.username) {
+                setLoggedInUser(decoded.username);
+            }
+        }
+    }, []);
+
+    // ====== MODAL HANDLERS ======
+    const handleOpenSignUp = () => {
+        setIsSignUpOpen(true);
+        setIsLoginOpen(false);
+    };
     const handleCloseSignUp = () => {
-        // Clear fields/state when closing
+        // Clear sign-up fields
         setEmail('');
+        setUsername('');
         setPassword('');
         setConfirmPassword('');
         setRememberMe(false);
 
         // Reset errors
         setEmailError('');
+        setUsernameError('');
         setPasswordError('');
         setConfirmPasswordError('');
-
         // Reset password checks
         setHasMinLength(false);
         setHasUppercase(false);
@@ -48,7 +87,17 @@ function App() {
         setIsSignUpOpen(false);
     };
 
-    // Validate email on blur
+    const handleOpenLogin = () => {
+        setIsLoginOpen(true);
+        setIsSignUpOpen(false);
+    };
+    const handleCloseLogin = () => {
+        setLoginUsername('');
+        setLoginPassword('');
+        setIsLoginOpen(false);
+    };
+
+    // ===== VALIDATIONS =====
     const validateEmail = (value: string) => {
         setEmail(value);
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -59,16 +108,22 @@ function App() {
         }
     };
 
-    // Check password strength each time user types
+    const validateUsername = (value: string) => {
+        setUsername(value);
+        if (value.trim().length < 3) {
+            setUsernameError('Username must be at least 3 characters');
+        } else {
+            setUsernameError('');
+        }
+    };
+
     const handlePasswordChange = (value: string) => {
         setPassword(value);
-
         setHasMinLength(value.length >= 8);
         setHasUppercase(/[A-Z]/.test(value));
         setHasNumber(/[0-9]/.test(value));
         setHasSpecialChar(/[^A-Za-z0-9]/.test(value));
 
-        // "strong enough" error if criteria not met
         if (
             value.length > 0 &&
             (value.length < 8 ||
@@ -82,7 +137,6 @@ function App() {
         }
     };
 
-    // Confirm password on blur or change
     const handleConfirmPassword = (value: string) => {
         setConfirmPassword(value);
         if (value && value !== password) {
@@ -92,44 +146,105 @@ function App() {
         }
     };
 
-    // Sign-up submission
+    // ====== SIGN-UP SUBMISSION ======
     const handleSignUpSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (emailError || passwordError || confirmPasswordError) {
-            return alert('Please fix the errors before submitting.');
+        // Basic client-side checks
+        if (emailError || usernameError || passwordError || confirmPasswordError) {
+            alert('Please fix the errors before submitting.');
+            return;
         }
 
-        // Check that passwords match
+        if (!username) {
+            setUsernameError('Username is required');
+            return;
+        }
+
         if (password !== confirmPassword) {
             setConfirmPasswordError('Passwords do not match');
             return;
         }
 
-        // Check that all password criteria are met
         if (!hasMinLength || !hasUppercase || !hasNumber || !hasSpecialChar) {
-            return alert('Please meet all password criteria.');
+            alert('Please meet all password criteria.');
+            return;
         }
 
-        // Send data to your backend
         try {
             const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/signup`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password, rememberMe }),
+                body: JSON.stringify({ email, username, password, rememberMe }),
             });
-            const data = await response.json();
+
+            // If the server doesn't send JSON or sends an error, this might fail
+            let data: any = {};
+            try {
+                data = await response.json();
+            } catch (err) {
+                console.error('Error parsing JSON:', err);
+            }
 
             if (response.ok) {
                 alert('Sign-up successful!');
+                navigate('/tutorial'); // navigate after success
                 handleCloseSignUp();
             } else {
-                alert(`Sign-up failed: ${data.message || 'Unknown error'}`);
+                const msg = data.message || 'Unknown error';
+                alert(`Sign-up failed: ${msg}`);
             }
         } catch (error) {
-            console.error(error);
+            console.error('Sign-up error:', error);
             alert('Server error. Please try again.');
         }
+    };
+
+    // ====== LOGIN SUBMISSION (USERNAME + PASSWORD) ======
+    const handleLoginSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: loginUsername, password: loginPassword }),
+            });
+
+            let data: any = {};
+            try {
+                data = await response.json();
+            } catch (jsonErr) {
+                console.error('Error reading JSON from login response:', jsonErr);
+            }
+
+            if (response.ok) {
+                // e.g. { token: "jwt-token-here", username: "bob" }
+                const { token, username } = data;
+                if (!token || !username) {
+                    alert('Login failed: no token or username returned by server.');
+                    return;
+                }
+
+                localStorage.setItem('myAppToken', token);
+                setLoggedInUser(username);
+                alert('Logged in successfully!');
+                handleCloseLogin();
+            } else {
+                // We got a non-2xx response
+                const msg = data.message || 'Unknown error';
+                alert(`Login failed: ${msg}`);
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            alert('Server error. Please try again.');
+        }
+    };
+
+    // ====== LOG OUT ======
+    const handleLogout = () => {
+        localStorage.removeItem('myAppToken');
+        setLoggedInUser(null);
     };
 
     return (
@@ -140,10 +255,23 @@ function App() {
                     <h1 className="brand">echo</h1>
                 </div>
                 <div className="nav-right">
-                    <button className="nav-btn">Log In</button>
-                    <button className="nav-btn signup-btn" onClick={handleOpenSignUp}>
-                        Sign Up
-                    </button>
+                    {loggedInUser ? (
+                        <>
+                            <span className="nav-username">Hello, {loggedInUser}!</span>
+                            <button className="nav-btn" onClick={handleLogout}>
+                                Log Out
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <button className="nav-btn" onClick={handleOpenLogin}>
+                                Log In
+                            </button>
+                            <button className="nav-btn signup-btn" onClick={handleOpenSignUp}>
+                                Sign Up
+                            </button>
+                        </>
+                    )}
                 </div>
             </header>
 
@@ -172,8 +300,7 @@ function App() {
 ├── be
 │   └── app
 │       └── Pages
-│          ├──App.tsx
-│          ├──LandingPage.tsx
+│          └──App.tsx
 │       └──CSS
 │          ├──Navbar.css
 │          ├──searchbar.css
@@ -190,8 +317,8 @@ function App() {
                         selected parts<span className="asterisk">*</span>
                     </h3>
                     <p className="note">
-                        <span className="asterisk">*</span> Code documentation and <span className="api-color">API</span> get their
-                        own special treatment
+                        <span className="asterisk">*</span> Code documentation and{' '}
+                        <span className="api-color">API</span> get their own special treatment
                     </p>
                 </div>
             </section>
@@ -204,12 +331,27 @@ function App() {
                             ×
                         </button>
 
-                        {/* Thank You Section */}
                         <div className="thank-you-section">
                             <p className="thank-you-text">Thank You for Thinking of Us &lt;3</p>
                         </div>
 
                         <form onSubmit={handleSignUpSubmit} className="signup-form">
+                            {/* Username Field */}
+                            <label htmlFor="username" className="signup-label">
+                                Username <span className="required-asterisk">*</span>
+                            </label>
+                            <input
+                                id="username"
+                                type="text"
+                                placeholder="Your username"
+                                value={username}
+                                required
+                                onBlur={(e) => validateUsername(e.target.value)}
+                                onChange={(e) => setUsername(e.target.value)}
+                                className="signup-input"
+                            />
+                            {usernameError && <p className="error-text">{usernameError}</p>}
+
                             {/* Email Field */}
                             <label htmlFor="email" className="signup-label">
                                 Email <span className="required-asterisk">*</span>
@@ -327,6 +469,55 @@ function App() {
 
                             <button type="submit" className="cta-btn submit-btn">
                                 Start Documenting
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* LOGIN MODAL (USERNAME + PASSWORD) */}
+            {isLoginOpen && (
+                <div className="modal-overlay" onClick={handleCloseLogin}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <button className="close-btn" onClick={handleCloseLogin}>
+                            ×
+                        </button>
+
+                        <div className="thank-you-section">
+                            <p className="thank-you-text">Welcome Back!</p>
+                        </div>
+
+                        <form onSubmit={handleLoginSubmit} className="login-form">
+                            {/* Username Field */}
+                            <label htmlFor="loginUsername" className="login-label">
+                                Username <span className="required-asterisk">*</span>
+                            </label>
+                            <input
+                                id="loginUsername"
+                                type="text"
+                                placeholder="Your username"
+                                value={loginUsername}
+                                required
+                                onChange={(e) => setLoginUsername(e.target.value)}
+                                className="login-input"
+                            />
+
+                            {/* Password Field */}
+                            <label htmlFor="loginPassword" className="login-label">
+                                Password <span className="required-asterisk">*</span>
+                            </label>
+                            <input
+                                id="loginPassword"
+                                type="password"
+                                placeholder="Your password"
+                                value={loginPassword}
+                                required
+                                onChange={(e) => setLoginPassword(e.target.value)}
+                                className="login-input"
+                            />
+
+                            <button type="submit" className="cta-btn submit-btn">
+                                Log In
                             </button>
                         </form>
                     </div>
