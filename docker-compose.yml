@@ -1,5 +1,4 @@
 services:
-  # 1) Database service first
   db:
     image: postgres:15
     container_name: my_postgres_db
@@ -13,35 +12,41 @@ services:
     volumes:
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
 
-  # 2) Backend depends on the db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   backend:
     build:
       context: ./be
       dockerfile: Dockerfile
     ports:
-      - "5001:5001"
-    volumes:
-      - ./be:/app
-      - /app/node_modules
+      - "5001:5000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       - PORT=5000
-      - JWT_SECRET=supersecretkey123
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/mydb
+    # Remove these so the container uses the code it built in the image:
+    # volumes:
+    #   - ./be:/app
+    #   - /app/node_modules
 
-  # 3) Frontend depends on the backend
+
   frontend:
     build:
       context: ./fe
       dockerfile: Dockerfile
     ports:
       - "5173:5173"
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_BASE_URL=http://localhost:5001
+    command: npm run dev -- --host 0.0.0.0
     volumes:
       - ./fe:/app
       - /app/node_modules
-    environment:
-      - VITE_API_BASE_URL=http://localhost:5000
-    command: npm run dev -- --host 0.0.0.0
-    depends_on:
-      - backend
