@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './App.css';
-
 // A helper function to decode a JWT
 function parseJwt(token: string) {
     try {

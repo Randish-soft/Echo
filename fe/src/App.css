@@ -1,3 +1,5 @@
+/* app.css (updated, no navbar) */
+
 /* Landing page container */
 .landing-page {
   font-family: 'Arial', sans-serif;
@@ -5,46 +7,6 @@
   margin: 0;
   padding: 0;
   background-color: #fefefe;
-}
-
-/* Navbar */
-.navbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 2rem;
-  background-color: #fff;
-  border-bottom: 1px solid #ccc;
-}
-
-.brand {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: bold;
-}
-
-.nav-right {
-  display: flex;
-  gap: 1rem;
-}
-
-.nav-btn {
-  background-color: transparent;
-  border: 1px solid #333;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  font-size: 0.9rem;
-}
-
-.nav-btn:hover {
-  background-color: #333;
-  color: #fff;
-}
-
-.signup-btn {
-  background-color: #333;
-  color: #fff;
 }
 
 /* Hero Section */
@@ -84,7 +46,6 @@
   border-radius: 4px;
   transition: background-color 0.2s;
 }
-
 .cta-btn:hover {
   background-color: #555;
 }
@@ -93,11 +54,9 @@
 .text-red {
   color: #EE3838;
 }
-
 .text-green {
   color: #3A9B3A;
 }
-
 .text-teal {
   color: #0EB8BE;
 }
@@ -106,7 +65,6 @@
 .asterisk {
   color: #B76319;
 }
-
 .api-color {
   color: #F529E8;
 }
@@ -120,13 +78,11 @@
   align-items: center;
   justify-content: center;
 }
-
 .code-tree-container {
   flex: 1 1 300px;
   max-width: 400px;
   overflow: auto;
 }
-
 .code-tree {
   background-color: #2e2e2e;
   color: #ccc;
@@ -141,16 +97,13 @@
   max-width: 500px;
   line-height: 1.6;
 }
-
 .info-text h3 {
   margin-bottom: 1rem;
   font-size: 1.5rem;
 }
-
 .info-text p {
   margin-bottom: 1rem;
 }
-
 .note {
   font-size: 0.9rem;
   color: #666;
@@ -163,23 +116,21 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5); /* semi-transparent background */
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 999; /* on top of everything */
+  z-index: 999;
 }
 
-/* MODAL CONTENT - entire pop-up is white */
-
+/* MODAL CONTENT */
 .modal-content {
-  background-color: #ffffff !important;; /* Fully white pop-up */
+  background-color: #ffffff !important;
   padding: 2rem;
   max-width: 400px;
   width: 90%;
   border-radius: 8px;
   position: relative;
-  /* Subtle box shadow for a “card” effect */
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
@@ -201,9 +152,8 @@
   border-radius: 4px;
   margin-bottom: 0.6rem;
   text-align: center;
-  background-color: #fff; /* Also white, so it matches the modal card */
+  background-color: #fff;
 }
-
 .thank-you-text {
   margin: 0;
   color: #0EB8BE;
@@ -216,60 +166,49 @@
   flex-direction: column;
   gap: 0.6rem;
 }
-
 .signup-label {
   font-size: 0.85rem;
   margin-bottom: 0.2rem;
 }
-
 .signup-input {
   padding: 0.3rem;
   border-radius: 4px;
   font-size: 0.85rem;
   border: 1px solid #ccc;
 }
-
 .required-asterisk {
   color: red;
 }
-
 .remember-me-container {
   display: flex;
   align-items: center;
   gap: 0.4rem;
 }
-
 .remember-me-checkbox {
   width: 0.9rem;
   height: 0.9rem;
 }
-
 .remember-me-label {
   margin: 0;
   font-size: 0.8rem;
 }
-
 .password-criteria {
   margin-top: 0.4rem;
   font-size: 0.8rem;
 }
-
 .criteria-title {
   margin-bottom: 0.3rem;
   font-weight: bold;
 }
-
 .criteria-item {
   display: flex;
   align-items: center;
   margin-bottom: 0.2rem;
 }
-
 .criteria-checkbox {
   width: 0.8rem;
   height: 0.8rem;
 }
-
 .criteria-label {
   margin-left: 0.3rem;
   font-size: 0.85rem;
@@ -299,12 +238,10 @@
   flex-direction: column;
   gap: 0.6rem;
 }
-
 .login-label {
   font-size: 0.85rem;
   margin-bottom: 0.2rem;
 }
-
 .login-input {
   padding: 0.3rem;
   border-radius: 4px;

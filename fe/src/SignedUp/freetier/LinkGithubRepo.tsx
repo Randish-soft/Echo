@@ -1,6 +1,6 @@
 // LinkGithubRepo.tsx
 import React from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
+
 // If you want icons, you could install "bootstrap-icons" or "react-icons" etc.
 // For demonstration, we’ll just put a placeholder in the button.
 
