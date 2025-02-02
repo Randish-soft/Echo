@@ -11,9 +11,6 @@ RUN npm install
 # Copy the rest of your files
 COPY . .
 
-# Build TypeScript code (if needed)
-RUN npm run build
-
 EXPOSE 5000
 
 CMD ["npm", "start"]
