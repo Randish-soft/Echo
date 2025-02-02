@@ -4,28 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="12d91834-8b4d-457b-a51e-20b85f1bba68" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/be/src/routes/documentsRouter.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/echography.pem" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/be/.env" beforeDir="false" afterPath="$PROJECT_DIR$/be/.env" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/be/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/be/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/be/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/be/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/be/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/be/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/be/src/auth/authRouter.ts" beforeDir="false" afterPath="$PROJECT_DIR$/be/src/auth/authRouter.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/be/src/server.ts" beforeDir="false" afterPath="$PROJECT_DIR$/be/src/server.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/fe/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/fe/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/public/favicon.ico" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/public/icon.ico" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/public/vite.svg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/src/SignedUp/freetier/CSS/repolinking.css" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/SignedUp/freetier/CSS/repolinking.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/src/SignedUp/freetier/LinkGithubRepo.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/SignedUp/freetier/LinkGithubRepo.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/vite.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/fe/vite.config.ts" afterDir="false" />
-    </list>
+    <list default="true" id="12d91834-8b4d-457b-a51e-20b85f1bba68" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -135,7 +114,7 @@
       <workItem from="1737708852265" duration="1000" />
       <workItem from="1737726292966" duration="29000" />
       <workItem from="1738404681965" duration="1866000" />
-      <workItem from="1738484681976" duration="3796000" />
+      <workItem from="1738484681976" duration="4848000" />
     </task>
     <servers />
   </component>
