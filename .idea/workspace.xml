@@ -5,12 +5,26 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="12d91834-8b4d-457b-a51e-20b85f1bba68" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/fe/src/global-css/navbar-signedin.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/src/App.css" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/App.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/be/src/routes/documentsRouter.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/echography.pem" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/be/.env" beforeDir="false" afterPath="$PROJECT_DIR$/be/.env" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/be/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/be/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/be/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/be/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/be/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/be/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/be/src/auth/authRouter.ts" beforeDir="false" afterPath="$PROJECT_DIR$/be/src/auth/authRouter.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/be/src/server.ts" beforeDir="false" afterPath="$PROJECT_DIR$/be/src/server.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fe/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/fe/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fe/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/fe/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fe/public/favicon.ico" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/fe/public/icon.ico" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/fe/public/vite.svg" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/fe/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/src/SignedUp/freetier/Doc-creation-page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/SignedUp/freetier/Doc-creation-page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fe/src/SignedUp/freetier/CSS/repolinking.css" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/SignedUp/freetier/CSS/repolinking.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/fe/src/SignedUp/freetier/LinkGithubRepo.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/SignedUp/freetier/LinkGithubRepo.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/src/global-css/navbar.css" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/global-css/navbar.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fe/vite.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/fe/vite.config.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -21,9 +35,9 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Dockerfile" />
-        <option value="TypeScript File" />
         <option value="TypeScript JSX File" />
         <option value="CSS File" />
+        <option value="TypeScript File" />
       </list>
     </option>
   </component>
@@ -55,28 +69,28 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "fe/app/creatingadoc",
-    "last_opened_file_path": "/Users/miguelibrahim/Desktop/Echo",
-    "list.type.of.created.stylesheet": "CSS",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "ts.external.directory.path": "/Users/miguelibrahim/Desktop/Echo/be/node_modules/typescript/lib",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;fe/app/creatingadoc&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/miguelibrahim/Desktop/Echo&quot;,
+    &quot;list.type.of.created.stylesheet&quot;: &quot;CSS&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;/Users/miguelibrahim/Desktop/Echo/be/node_modules/typescript/lib&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/be" />
       <recent name="$PROJECT_DIR$/figma" />
       <recent name="$PROJECT_DIR$/fe/public" />
       <recent name="$PROJECT_DIR$/be/src" />
-      <recent name="$PROJECT_DIR$/be" />
-      <recent name="$PROJECT_DIR$" />
     </key>
   </component>
   <component name="SharedIndexes">
@@ -111,6 +125,17 @@
       <workItem from="1736094940755" duration="3600000" />
       <workItem from="1736179312921" duration="3391000" />
       <workItem from="1736251119189" duration="4262000" />
+      <workItem from="1736352428674" duration="4217000" />
+      <workItem from="1736519548594" duration="1637000" />
+      <workItem from="1736521197935" duration="1574000" />
+      <workItem from="1736622378293" duration="42000" />
+      <workItem from="1736969521634" duration="4578000" />
+      <workItem from="1737017684069" duration="599000" />
+      <workItem from="1737649658678" duration="603000" />
+      <workItem from="1737708852265" duration="1000" />
+      <workItem from="1737726292966" duration="29000" />
+      <workItem from="1738404681965" duration="1866000" />
+      <workItem from="1738484681976" duration="3796000" />
     </task>
     <servers />
   </component>

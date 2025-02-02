@@ -28,24 +28,27 @@ services:
       db:
         condition: service_healthy
     environment:
-      PGHOST: my_postgres_db       # <--- Use service name
-      PGUSER: myuser
-      PGPASSWORD: mypass
+      # Use the *service name* "db" for PGHOST, not container_name
+      PGHOST: db
+      PGUSER: postgres
+      PGPASSWORD: postgres
       PGDATABASE: mydb
       PGPORT: 5432
 
+      # If you need your JWT_SECRET or other env vars:
+      JWT_SECRET: supersecretkey123
 
   frontend:
     build:
       context: ./fe
       dockerfile: Dockerfile
     ports:
-      - "5173:5173"
+      - "80:80"
     depends_on:
       - backend
     environment:
-      - VITE_API_BASE_URL=http://localhost:5001
-    command: npm run dev -- --host 0.0.0.0
+      # The backend is published on host port 5001 → http://localhost:5001
+      VITE_API_BASE_URL: "http://localhost:5001"
     volumes:
       - ./fe:/app
-      - /app/node_modules
+    command: sh -c "npm run build && npx serve -s dist -l 80"
