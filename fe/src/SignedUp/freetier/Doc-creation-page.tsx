@@ -1,7 +1,6 @@
 // Doc-creation-page.tsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';  // <-- add this
-import 'bootstrap/dist/css/bootstrap.min.css';
 
 interface DocItem {
     title: string;

@@ -108,13 +108,17 @@ function App() {
         }
     };
 
+    // Updated username validation: only alphanumeric + underscore + dot
     const validateUsername = (value: string) => {
-        setUsername(value);
-        if (value.trim().length < 3) {
-            setUsernameError('Username must be at least 3 characters');
+        const usernameRegex = /^[A-Za-z0-9._]+$/;
+        if (!usernameRegex.test(value)) {
+            setUsernameError('Username can only contain letters, digits, underscores, and periods.');
+        } else if (value.trim().length < 3) {
+            setUsernameError('Username must be at least 3 characters long.');
         } else {
             setUsernameError('');
         }
+        setUsername(value);
     };
 
     const handlePasswordChange = (value: string) => {
@@ -347,7 +351,7 @@ function App() {
                                 value={username}
                                 required
                                 onBlur={(e) => validateUsername(e.target.value)}
-                                onChange={(e) => setUsername(e.target.value)}
+                                onChange={(e) => validateUsername(e.target.value)}
                                 className="signup-input"
                             />
                             {usernameError && <p className="error-text">{usernameError}</p>}
@@ -363,7 +367,7 @@ function App() {
                                 value={email}
                                 required
                                 onBlur={(e) => validateEmail(e.target.value)}
-                                onChange={(e) => setEmail(e.target.value)}
+                                onChange={(e) => validateEmail(e.target.value)}
                                 className="signup-input"
                             />
                             {emailError && <p className="error-text">{emailError}</p>}

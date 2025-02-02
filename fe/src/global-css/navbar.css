@@ -1,34 +1,45 @@
-/* navbar.css - your global navbar styles */
+/* navbar.css */
 
-/* Optional: override or supplement Bootstrap classes for your navbar */
-.navbar-container {
-    /* This wraps the entire navbar area */
+/* Navbar Container */
+.navbar {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-
-    /* spacing / border, etc. */
+    justify-content: space-between;
+    padding: 1rem 2rem;
+    background-color: #fff;
     border-bottom: 1px solid #ccc;
-    padding-bottom: 0.5rem;
-    margin-bottom: 1.5rem;
 }
 
-.navbar-brand {
+/* Brand (logo/title) */
+.brand {
+    margin: 0;
     font-size: 1.5rem;
     font-weight: bold;
 }
 
-.navbar-logout-btn {
-    /* Something like an outline-dark style */
+/* Right-side container (optional) */
+.nav-right {
+    display: flex;
+    gap: 1rem;
+}
+
+/* Generic nav button */
+.nav-btn {
     background-color: transparent;
-    color: #333;
     border: 1px solid #333;
     padding: 0.5rem 1rem;
     cursor: pointer;
     transition: background-color 0.2s;
+    font-size: 0.9rem;
 }
 
-.navbar-logout-btn:hover {
+.nav-btn:hover {
+    background-color: #333;
+    color: #fff;
+}
+
+/* “Sign Up” button with different styling */
+.signup-btn {
     background-color: #333;
     color: #fff;
 }

@@ -1,87 +1,86 @@
-// LinkGithubRepo.tsx
-import React from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
-// If you want icons, you could install "bootstrap-icons" or "react-icons" etc.
-// For demonstration, we’ll just put a placeholder in the button.
+// src/SignedUp/freetier/LinkGithubRepo.tsx
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import "./CSS/repolinking.css";
 
 const LinkGithubRepo: React.FC = () => {
-    const handleMenuClick = () => {
-        // For example, toggle a sidebar or do something else
-        alert('Menu button clicked!');
-    };
+    const [token, setToken] = useState<string | null>(null);
+    const [repos, setRepos] = useState<any[]>([]);
+    const [selectedRepo, setSelectedRepo] = useState<string | null>(null);
 
-    const handleAvatarClick = () => {
-        // Could open a user profile menu, for instance
-        alert('Avatar clicked!');
-    };
+    // Use React Router's useLocation to read query params like ?token=...
+    const location = useLocation();
+
+    useEffect(() => {
+        const urlParams = new URLSearchParams(location.search);
+        const accessToken = urlParams.get('token');
+        if (accessToken) {
+            setToken(accessToken);
+            fetchRepositories(accessToken);
+        }
+    }, [location.search]);
 
     const handleGithubSignIn = () => {
-        // Here you would redirect to your backend GitHub OAuth flow
-        alert('Signing in with GitHub...');
+        // This hits your backend's /auth/github route,
+        // which starts the GitHub OAuth flow
+        window.location.href = 'http://localhost:5000/auth/github';
+    };
+
+    const fetchRepositories = async (accessToken: string) => {
+        try {
+            const response = await fetch('http://localhost:5000/auth/github/repos', {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            });
+            const data = await response.json();
+            setRepos(data);
+        } catch (error) {
+            console.error('Error fetching repositories:', error);
+        }
+    };
+
+    const handleRepoSelect = (repoName: string) => {
+        setSelectedRepo(repoName);
+        alert(`You have linked to the repository: ${repoName}`);
     };
 
     return (
         <div className="bg-light" style={{ minHeight: '100vh' }}>
-            {/* HEADER / NAVBAR */}
             <nav className="navbar navbar-light bg-white border-bottom px-3">
-                <div className="d-flex align-items-center">
-                    {/* “Hamburger” menu icon */}
-                    <button
-                        className="btn btn-outline-secondary me-3"
-                        onClick={handleMenuClick}
-                    >
-                        {/* Some icon or just 3 lines */}
-                        <span className="navbar-toggler-icon"></span>
-                    </button>
-
-                    <span className="navbar-brand mb-0 h1">echo</span>
-                </div>
-
-                {/* Right side: user avatar (or icon) */}
-                <div onClick={handleAvatarClick} style={{ cursor: 'pointer' }}>
-                    <img
-                        src="https://via.placeholder.com/40x40.png?text=User"
-                        alt="User Avatar"
-                        style={{ borderRadius: '50%' }}
-                    />
-                </div>
+                <span className="navbar-brand mb-0 h1">echo</span>
             </nav>
 
-            {/* MAIN CONTENT */}
-            <div
-                className="d-flex justify-content-center align-items-center"
-                style={{ minHeight: '80vh' }}
-            >
-                {/* The pinkish card */}
-                <div
-                    className="text-center p-4"
-                    style={{
-                        backgroundColor: '#d9a7a7', // or a different pinkish shade
-                        borderRadius: '8px',
-                        width: '350px',
-                        maxWidth: '90%',
-                    }}
-                >
-                    <h2 style={{ marginBottom: '1.5rem' }}>Let’s Link Your GitHub Rep :D</h2>
-
-                    {/* GitHub Sign-In Button */}
-                    <button
-                        className="btn btn-dark d-inline-flex align-items-center"
-                        onClick={handleGithubSignIn}
-                    >
-                        {/* If you have an icon library, you could insert an actual GitHub icon here. */}
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="22"
-                            height="22"
-                            fill="currentColor"
-                            className="bi bi-github me-2"
-                            viewBox="0 0 16 16"
-                        >
-                            <path d="M8 0C3.58 0 0 3.58 ... (GitHub icon path data) ..." />
-                        </svg>
-                        Sign in with GitHub
-                    </button>
+            <div className="main-container">
+                <div className="github-card">
+                    <h2 className="card-title">Let’s Link Your GitHub Repo :D</h2>
+                    {!token ? (
+                        <button className="github-signin-btn" onClick={handleGithubSignIn}>
+                            <span className="btn-text">Link Up Your GitHub</span>
+                            {/* Optionally include the GitHub SVG icon */}
+                        </button>
+                    ) : (
+                        <div>
+                            <h3>Select a Repository:</h3>
+                            <ul className="repo-list">
+                                {repos.map((repo) => (
+                                    <li key={repo.id}>
+                                        <button
+                                            className="btn btn-outline-primary repo-btn"
+                                            onClick={() => handleRepoSelect(repo.full_name)}
+                                        >
+                                            {repo.full_name}
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                            {selectedRepo && (
+                                <p className="selected-repo">
+                                    You selected: <strong>{selectedRepo}</strong>
+                                </p>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
