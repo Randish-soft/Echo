@@ -7,6 +7,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
+# Ensure TypeScript is globally available (if needed)
+RUN npm install -g typescript
+
 # Copy the rest of the code (you can skip this if you're going to rely solely on mounting)
 COPY . .
 
