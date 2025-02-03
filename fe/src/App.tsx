@@ -2,11 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './App.css';
 
-// A helper function to decode a JWT
+/**
+ * Interface to avoid using `any` for server responses.
+ * Adjust fields as needed for your backend response shape.
+ */
+interface ApiResponse {
+    message?: string;
+    token?: string;
+    username?: string;
+}
+
+/**
+ * A helper function to decode a JWT using `atob`
+ * instead of `Buffer.from` for browser compatibility.
+ */
 function parseJwt(token: string) {
     try {
         const base64Payload = token.split('.')[1];
-        const payload = Buffer.from(base64Payload, 'base64').toString();
+        // Use `atob` instead of `Buffer` in the browser
+        const payload = atob(base64Payload);
         return JSON.parse(payload);
     } catch (e) {
         console.error('Failed to parse token', e);
@@ -65,6 +79,7 @@ function App() {
         setIsSignUpOpen(true);
         setIsLoginOpen(false);
     };
+
     const handleCloseSignUp = () => {
         // Clear sign-up fields
         setEmail('');
@@ -91,6 +106,7 @@ function App() {
         setIsLoginOpen(true);
         setIsSignUpOpen(false);
     };
+
     const handleCloseLogin = () => {
         setLoginUsername('');
         setLoginPassword('');
@@ -112,7 +128,9 @@ function App() {
     const validateUsername = (value: string) => {
         const usernameRegex = /^[A-Za-z0-9._]+$/;
         if (!usernameRegex.test(value)) {
-            setUsernameError('Username can only contain letters, digits, underscores, and periods.');
+            setUsernameError(
+                'Username can only contain letters, digits, underscores, and periods.',
+            );
         } else if (value.trim().length < 3) {
             setUsernameError('Username must be at least 3 characters long.');
         } else {
@@ -176,14 +194,17 @@ function App() {
         }
 
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/signup`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, username, password, rememberMe }),
-            });
+            const response = await fetch(
+                `${import.meta.env.VITE_API_BASE_URL}/auth/signup`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, username, password, rememberMe }),
+                },
+            );
 
-            // If the server doesn't send JSON or sends an error, this might fail
-            let data: any = {};
+            /** Provide a typed object instead of `any` */
+            let data: ApiResponse = {};
             try {
                 data = await response.json();
             } catch (err) {
@@ -209,13 +230,16 @@ function App() {
         e.preventDefault();
 
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: loginUsername, password: loginPassword }),
-            });
+            const response = await fetch(
+                `${import.meta.env.VITE_API_BASE_URL}/auth/login`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: loginUsername, password: loginPassword }),
+                },
+            );
 
-            let data: any = {};
+            let data: ApiResponse = {};
             try {
                 data = await response.json();
             } catch (jsonErr) {

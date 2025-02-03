@@ -10,11 +10,18 @@ RUN npm install
 # Ensure TypeScript is globally available (if needed)
 RUN npm install -g typescript
 
-# Copy the rest of the code (you can skip this if you're going to rely solely on mounting)
+# Install TypeScript types and related dependencies
+RUN npm install --save-dev @types/react @types/react-dom @types/react-router-dom
+
+# Run lint fix to catch common issues automatically
+RUN npm run lint:fix || true
+
+# Copy the rest of the application code
 COPY . .
+RUN npm run build
 
-# Expose the Vite dev server port
-EXPOSE 5173
-
-# Run Vite in development mode
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+# Production stage: serve the app using Nginx
+FROM nginx:latest
+COPY --from=build /app/dist /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
