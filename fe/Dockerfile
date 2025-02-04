@@ -1,4 +1,5 @@
-FROM node:22.12.0
+# Build stage
+FROM node:22.12.0 AS build
 
 # Set the working directory
 WORKDIR /app
@@ -18,10 +19,15 @@ RUN npm run lint:fix || true
 
 # Copy the rest of the application code
 COPY . .
+
+# Build the frontend
 RUN npm run build
 
-# Production stage: serve the app using Nginx
+# Production stage
 FROM nginx:latest
+
+# Copy built assets from the build stage
 COPY --from=build /app/dist /usr/share/nginx/html
+
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
