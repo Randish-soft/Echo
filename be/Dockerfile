@@ -1,16 +1,16 @@
-FROM node:18
+FROM node:22.13.1
 
+# Set the working directory
 WORKDIR /app
 
-# Copy only package files first for better caching
+# Copy package files and install dependencies
 COPY package*.json ./
-
-# Install dependencies (no native builds needed)
 RUN npm install
 
-# Copy the rest of your files
+# Copy the source code and compile TypeScript
 COPY . .
+RUN npx tsc
 
-EXPOSE 5000
-
-CMD ["npm", "start"]
+# Expose the port and run the compiled server
+EXPOSE 5001
+CMD ["node", "dist/server.js"]

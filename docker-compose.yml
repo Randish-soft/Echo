@@ -11,7 +11,6 @@ services:
       POSTGRES_DB: mydb
     volumes:
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
-
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres || exit 1"]
       interval: 5s
@@ -28,14 +27,11 @@ services:
       db:
         condition: service_healthy
     environment:
-      # Use the *service name* "db" for PGHOST, not container_name
       PGHOST: db
       PGUSER: postgres
       PGPASSWORD: postgres
       PGDATABASE: mydb
       PGPORT: 5432
-
-      # If you need your JWT_SECRET or other env vars:
       JWT_SECRET: supersecretkey123
 
   frontend:
@@ -43,12 +39,8 @@ services:
       context: ./fe
       dockerfile: Dockerfile
     ports:
-      - "5173:5173"
+      - "5173:80"
     depends_on:
       - backend
     environment:
-      # The backend is published on host port 5001 → http://localhost:5001
       VITE_API_BASE_URL: "http://localhost:5001"
-    volumes:
-      - ./fe:/app
-    command: sh -c "npm run build && npx serve -s dist -l 80"
