@@ -1,14 +1,17 @@
-// src/SignedUp/freetier/LinkGithubRepo.tsx
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import "./CSS/repolinking.css";
 
+interface Repo {
+    id: number;
+    full_name: string;
+}
+
 const LinkGithubRepo: React.FC = () => {
     const [token, setToken] = useState<string | null>(null);
-    const [repos, setRepos] = useState<any[]>([]);
+    const [repos, setRepos] = useState<Repo[]>([]);
     const [selectedRepo, setSelectedRepo] = useState<string | null>(null);
 
-    // Use React Router's useLocation to read query params like ?token=...
     const location = useLocation();
 
     useEffect(() => {
@@ -21,8 +24,6 @@ const LinkGithubRepo: React.FC = () => {
     }, [location.search]);
 
     const handleGithubSignIn = () => {
-        // This hits your backend's /auth/github route,
-        // which starts the GitHub OAuth flow
         window.location.href = 'http://localhost:5000/auth/github';
     };
 
@@ -33,7 +34,7 @@ const LinkGithubRepo: React.FC = () => {
                     Authorization: `Bearer ${accessToken}`,
                 },
             });
-            const data = await response.json();
+            const data: Repo[] = await response.json();
             setRepos(data);
         } catch (error) {
             console.error('Error fetching repositories:', error);
@@ -57,7 +58,6 @@ const LinkGithubRepo: React.FC = () => {
                     {!token ? (
                         <button className="github-signin-btn" onClick={handleGithubSignIn}>
                             <span className="btn-text">Link Up Your GitHub</span>
-                            {/* Optionally include the GitHub SVG icon */}
                         </button>
                     ) : (
                         <div>

@@ -1,4 +1,5 @@
-FROM node:22.12.0
+# Build stage
+FROM node:22.12.0 AS build
 
 # Set the working directory
 WORKDIR /app
@@ -10,11 +11,23 @@ RUN npm install
 # Ensure TypeScript is globally available (if needed)
 RUN npm install -g typescript
 
-# Copy the rest of the code (you can skip this if you're going to rely solely on mounting)
+# Install TypeScript types and related dependencies
+RUN npm install --save-dev @types/react @types/react-dom @types/react-router-dom
+
+# Run lint fix to catch common issues automatically
+RUN npm run lint:fix || true
+
+# Copy the rest of the application code
 COPY . .
 
-# Expose the Vite dev server port
-EXPOSE 5173
+# Build the frontend
+RUN npm run build
 
-# Run Vite in development mode
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+# Production stage
+FROM nginx:latest
+
+# Copy built assets from the build stage
+COPY --from=build /app/dist /usr/share/nginx/html
+
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
