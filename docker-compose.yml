@@ -39,7 +39,7 @@ services:
       context: ./fe
       dockerfile: Dockerfile
     ports:
-      - "5173:80"
+      - "80:80"  # <-- map host 80 -> container 80
     depends_on:
       - backend
     environment:
