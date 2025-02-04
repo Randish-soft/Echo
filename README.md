@@ -17,7 +17,6 @@ To install and set up the project, follow these steps:
 
 3.  --install docker--
 4.  Start instance
-
    ```sh
    docker-compose up
    ```
