@@ -1,14 +1,13 @@
-FROM node:22.12.0 AS build
+# fe/Dockerfile
+FROM node:22.13.1
+
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-RUN npm run build
 
-FROM nginx:latest
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx-config/default.conf /etc/nginx/conf.d/default.conf
+# Listen on port 5173 inside the container
+EXPOSE 5173
 
-EXPOSE 80
-EXPOSE 443
-CMD ["nginx", "-g", "daemon off;"]
+# Tell Vite to bind to 0.0.0.0 so Docker can forward the port
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

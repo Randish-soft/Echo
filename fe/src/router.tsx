@@ -22,9 +22,7 @@ const router = createBrowserRouter(
             element: <LinkGithubRepo />,
         },
     ],
-    {
-        basename: '/echo', // <-- important if your site is at /echo/
-    }
+
 );
 
 export default router;

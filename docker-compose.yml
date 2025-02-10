@@ -21,6 +21,7 @@ services:
     build:
       context: ./be
       dockerfile: Dockerfile
+    container_name: echo_backend
     ports:
       - "5001:5000"
     depends_on:
@@ -38,13 +39,11 @@ services:
     build:
       context: ./fe
       dockerfile: Dockerfile
+    container_name: echo_frontend
     ports:
-      - "80:80"
-      - "443:443"  # So container's port 443 is publicly accessible
+      - "127.0.0.1:5173:5173"
+
     depends_on:
       - backend
     environment:
-      VITE_API_BASE_URL: "http://backend:5001"
-    volumes:
-      - /etc/letsencrypt/live/prometh-eus.org:/etc/letsencrypt/live/prometh-eus.org:ro
-      - /etc/letsencrypt/archive/prometh-eus.org:/etc/letsencrypt/archive/prometh-eus.org:ro
+      VITE_API_BASE_URL: "http://localhost:5001"
