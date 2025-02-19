@@ -41,9 +41,16 @@ services:
       dockerfile: Dockerfile
     container_name: echo_frontend
     ports:
-      - "127.0.0.1:5173:5173"
-
+      - "5173:5173"
     depends_on:
       - backend
     environment:
       VITE_API_BASE_URL: "http://localhost:5001"
+    volumes:
+      # 1) Mount your entire FE folder into /app, but exclude node_modules to avoid conflicts
+      - ./fe:/app
+
+      # 2) If you want to preserve the container’s installed `node_modules`
+      #    create an anonymous volume so you don't overwrite it with your host
+      #    This ensures Docker doesn't blow away node_modules with an empty local folder
+      - /app/node_modules

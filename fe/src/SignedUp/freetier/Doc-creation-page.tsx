@@ -1,6 +1,7 @@
-// Doc-creation-page.tsx
 import React from 'react';
-import { useNavigate } from 'react-router-dom';  // <-- add this
+import { useNavigate } from 'react-router-dom';
+import "../../global-css/navbar.css";
+import "./CSS/doc.css";
 
 interface DocItem {
     title: string;
@@ -9,88 +10,37 @@ interface DocItem {
 }
 
 const DocCreationPage: React.FC = () => {
-    const navigate = useNavigate(); // for navigation
+    const navigate = useNavigate();
 
-    // Exactly 7 items
     const docItems: DocItem[] = [
-        {
-            title: 'Free-style',
-            description:
-                'You get to choose your own style and you incorporate many templates together',
-            imgSrc: 'https://via.placeholder.com/80?text=FreeStyle',
-        },
-        {
-            title: 'User manuals',
-            description: 'Not too technical, only explaining how to use the app.',
-            imgSrc: 'https://via.placeholder.com/80?text=UserManual',
-        },
-        {
-            title: 'Technical manuals',
-            description: "For API's and how specific code classes/clumps works",
-            imgSrc: 'https://via.placeholder.com/80?text=TechManual',
-        },
-        {
-            title: 'Code Documentation',
-            description:
-                "Okay, you're really serious about explaining each file by itself, slay.",
-            imgSrc: 'https://via.placeholder.com/80?text=CodeDoc',
-        },
-        {
-            title: 'Proof of Concept Manual',
-            description:
-                'You want to write a doc that explains how the whole application works',
-            imgSrc: 'https://via.placeholder.com/80?text=Proof',
-        },
-        {
-            title: 'Project Idea',
-            description:
-                'You dont have code, but you want to write a whole document on how it should technically work',
-            imgSrc: 'https://via.placeholder.com/80?text=ProjectIdea',
-        },
-        {
-            title: 'Copyrights',
-            description:
-                "You worked really hard on your app/project, time to make it unique, don't let anyone copy it",
-            imgSrc: 'https://via.placeholder.com/80?text=Copyright',
-        },
+        { title: 'Free Style', description: 'You get to choose your own style and you incorporate many templates.', imgSrc: 'https://via.placeholder.com/80?text=FreeStyle' },
+        { title: 'User Manual', description: 'Not too technical, only explaining how to use the app (stakeholders, ...).', imgSrc: 'https://via.placeholder.com/80?text=UserManual' },
+        { title: 'Tech Manual', description: "For API's and how specific code documentation of classes/clumps. ", imgSrc: 'https://via.placeholder.com/80?text=TechManual' },
+        { title: 'Code Doc', description: "Okay, you're really serious about explaining each file by itself, slay.", imgSrc: 'https://via.placeholder.com/80?text=CodeDoc' },
+        { title: 'Proof of Concept', description: 'You want to write a doc that explains how the whole application works.', imgSrc: 'https://via.placeholder.com/80?text=Proof' },
+        { title: 'Project Idea', description: 'You want to write a document on how your app should technically work.', imgSrc: 'https://via.placeholder.com/80?text=ProjectIdea' },
+        { title: 'Copyrights', description: "You worked really hard on your app/project, time to make it yours.", imgSrc: 'https://via.placeholder.com/80?text=Copyright' },
     ];
 
     const handleLogout = () => {
-        alert('Logging out...');
+        localStorage.removeItem('myAppToken');
+        navigate('/');
     };
 
-    // This function will run when any card is clicked
-    const handleCardClick = () => {
-        // e.g. navigate to the link-GitHub page:
-        navigate('/github-link');
-    };
+    const handleCardClick = () => navigate('/github-link');
 
     return (
         <div className="container py-4">
-            {/* HEADER */}
-            <div className="d-flex justify-content-between align-items-center border-bottom pb-2 mb-4">
-                <div className="fs-4 fw-bold">echo</div>
-                <button className="btn btn-outline-dark" onClick={handleLogout}>
-                    Log out
-                </button>
-            </div>
-
-            {/* TITLE */}
-            <h1 className="display-5 text-center mb-5">
-                Create Your First Documentation
-            </h1>
-
-            {/* FIRST ROW (4 cards) */}
-            <div className="row g-4">
+            <header className="navbar">
+                <h1 className="brand">echo</h1>
+                <button className="nav-btn" onClick={handleLogout}>Log out</button>
+            </header>
+            <h1 className="display-5 text-center mb-5">Create Your First Documentation</h1>
+            <div className="row g-4 d-flex justify-content-around mb-4">
                 {docItems.slice(0, 4).map((item, idx) => (
                     <div className="col-md-3" key={idx}>
                         <div className="card h-100 text-center" onClick={handleCardClick}>
-                            <img
-                                src={item.imgSrc}
-                                alt={item.title}
-                                className="mx-auto mt-3"
-                                style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8 }}
-                            />
+                            <img src={item.imgSrc} alt={item.title} className="mx-auto mt-3" />
                             <div className="card-body">
                                 <h5 className="card-title">{item.title}</h5>
                                 <p className="card-text">{item.description}</p>
@@ -99,20 +49,11 @@ const DocCreationPage: React.FC = () => {
                     </div>
                 ))}
             </div>
-
-            {/* SECOND ROW (3 cards, offset for "concert" style) */}
-            <div className="row g-4 mt-1">
-                {/* An empty col to shift the row to the right (concert seating) */}
-                <div className="col-md-1" />
+            <div className="row g-4 d-flex justify-content-center">
                 {docItems.slice(4).map((item, idx) => (
                     <div className="col-md-3" key={idx}>
                         <div className="card h-100 text-center" onClick={handleCardClick}>
-                            <img
-                                src={item.imgSrc}
-                                alt={item.title}
-                                className="mx-auto mt-3"
-                                style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8 }}
-                            />
+                            <img src={item.imgSrc} alt={item.title} className="mx-auto mt-3" />
                             <div className="card-body">
                                 <h5 className="card-title">{item.title}</h5>
                                 <p className="card-text">{item.description}</p>

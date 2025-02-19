@@ -17,6 +17,7 @@ $$;
 -- 3) Create 'users' table if it doesn't exist
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
+  username VARCHAR(50) NOT NULL UNIQUE,  -- <-- ADDED THIS LINE
   email VARCHAR(100) NOT NULL UNIQUE,
   password VARCHAR(200) NOT NULL
 );
@@ -53,5 +54,3 @@ CREATE TABLE IF NOT EXISTS document_shares (
     REFERENCES users (id)
     ON DELETE CASCADE
 );
-
--- More tables or relationships can go here as needed...
