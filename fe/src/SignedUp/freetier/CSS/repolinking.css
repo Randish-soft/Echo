@@ -1,3 +1,5 @@
+/* repolinking.css */
+
 /* Center the main container */
 .main-container {
     display: flex;
@@ -54,8 +56,18 @@
     text-align: center;
 }
 
-/* Icon inside the button */
-.github-icon {
-    width: 22px;
-    height: 22px;
+/* (Optional) Repo list styling */
+.repo-list {
+    list-style: none;
+    padding-left: 0;
+    margin: 1rem 0;
+}
+
+.repo-btn {
+    margin-bottom: 0.5rem;
+}
+
+.selected-repo {
+    margin-top: 0.5rem;
+    font-style: italic;
 }
