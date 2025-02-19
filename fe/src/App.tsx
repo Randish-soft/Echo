@@ -1,10 +1,11 @@
+// src/App.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './App.css';
-import '../src/global-css/navbar.css'
+import '../src/global-css/navbar.css';
+
 /**
- * Interface to avoid using `any` for server responses.
- * Adjust fields as needed for your backend response shape.
+ * Interface for your backend's JSON shape.
  */
 interface ApiResponse {
     message?: string;
@@ -13,13 +14,11 @@ interface ApiResponse {
 }
 
 /**
- * A helper function to decode a JWT using `atob`
- * instead of `Buffer.from` for browser compatibility.
+ * Helper to decode a JWT using `atob`
  */
 function parseJwt(token: string) {
     try {
         const base64Payload = token.split('.')[1];
-        // Use `atob` instead of `Buffer` in the browser
         const payload = atob(base64Payload);
         return JSON.parse(payload);
     } catch (e) {
@@ -63,7 +62,7 @@ function App() {
     const [loginUsername, setLoginUsername] = useState('');
     const [loginPassword, setLoginPassword] = useState('');
 
-    // On mount, check if a token is stored in localStorage
+    // On mount, check if there's a token in localStorage
     useEffect(() => {
         const token = localStorage.getItem('myAppToken');
         if (token) {
@@ -93,6 +92,7 @@ function App() {
         setUsernameError('');
         setPasswordError('');
         setConfirmPasswordError('');
+
         // Reset password checks
         setHasMinLength(false);
         setHasUppercase(false);
@@ -129,7 +129,7 @@ function App() {
         const usernameRegex = /^[A-Za-z0-9._]+$/;
         if (!usernameRegex.test(value)) {
             setUsernameError(
-                'Username can only contain letters, digits, underscores, and periods.',
+                'Username can only contain letters, digits, underscores, and periods.'
             );
         } else if (value.trim().length < 3) {
             setUsernameError('Username must be at least 3 characters long.');
@@ -200,10 +200,9 @@ function App() {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, username, password, rememberMe }),
-                },
+                }
             );
 
-            /** Provide a typed object instead of `any` */
             let data: ApiResponse = {};
             try {
                 data = await response.json();
@@ -213,7 +212,8 @@ function App() {
 
             if (response.ok) {
                 alert('Sign-up successful!');
-                navigate('/tutorial'); // navigate after success
+                // Navigate to doc creation
+                navigate('/tutorial');
                 handleCloseSignUp();
             } else {
                 const msg = data.message || 'Unknown error';
@@ -236,7 +236,7 @@ function App() {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username: loginUsername, password: loginPassword }),
-                },
+                }
             );
 
             let data: ApiResponse = {};
@@ -247,7 +247,6 @@ function App() {
             }
 
             if (response.ok) {
-                // e.g. { token: "jwt-token-here", username: "bob" }
                 const { token, username } = data;
                 if (!token || !username) {
                     alert('Login failed: no token or username returned by server.');
@@ -258,8 +257,11 @@ function App() {
                 setLoggedInUser(username);
                 alert('Logged in successfully!');
                 handleCloseLogin();
+
+                // Navigate to doc creation page
+                navigate('/tutorial');
+
             } else {
-                // We got a non-2xx response
                 const msg = data.message || 'Unknown error';
                 alert(`Login failed: ${msg}`);
             }

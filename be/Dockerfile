@@ -1,16 +1,16 @@
+# be/Dockerfile
 FROM node:22.13.1
 
-# Set the working directory
-WORKDIR /be/src
+WORKDIR /be
 
-# Copy package files and install dependencies
+# Copy package files first
 COPY package*.json ./
 RUN npm install
 
-# Copy the source code and compile TypeScript
+# Copy source code & build
 COPY . .
 RUN npx tsc
 
-# Expose the port and run the compiled server
+# Expose 5000 internally
 EXPOSE 5001
 CMD ["node", "dist/server.js"]
