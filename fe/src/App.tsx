@@ -1,6 +1,6 @@
-// src/App.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FiMenu } from 'react-icons/fi';
 import './App.css';
 import '../src/global-css/navbar.css';
 
@@ -14,7 +14,7 @@ interface ApiResponse {
 }
 
 /**
- * Helper to decode a JWT using `atob`
+ * Helper to decode a JWT using `atob`.
  */
 function parseJwt(token: string) {
     try {
@@ -37,6 +37,9 @@ function App() {
     // ===== LOGGED-IN USER =====
     const [loggedInUser, setLoggedInUser] = useState<string | null>(null);
 
+    // ===== NAV MENU STATE =====
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
     // ===== SIGN-UP FORM FIELDS =====
     const [email, setEmail] = useState('');
     const [emailError, setEmailError] = useState('');
@@ -52,17 +55,20 @@ function App() {
 
     const [rememberMe, setRememberMe] = useState(false);
 
-    // Password strength checks
+    // ===== PASSWORD STRENGTH CHECKS =====
     const [hasMinLength, setHasMinLength] = useState(false);
     const [hasUppercase, setHasUppercase] = useState(false);
     const [hasNumber, setHasNumber] = useState(false);
     const [hasSpecialChar, setHasSpecialChar] = useState(false);
 
-    // ===== LOGIN FORM FIELDS (username + password) =====
+    // ===== LOGIN FORM FIELDS =====
     const [loginUsername, setLoginUsername] = useState('');
     const [loginPassword, setLoginPassword] = useState('');
 
-    // On mount, check if there's a token in localStorage
+    /**
+     * On mount, check if there's a token in localStorage.
+     * In production, you'd handle session IDs or cookies differently.
+     */
     useEffect(() => {
         const token = localStorage.getItem('myAppToken');
         if (token) {
@@ -73,14 +79,14 @@ function App() {
         }
     }, []);
 
-    // ====== MODAL HANDLERS ======
+    // ====== MODAL HANDLERS =====
     const handleOpenSignUp = () => {
         setIsSignUpOpen(true);
         setIsLoginOpen(false);
     };
 
     const handleCloseSignUp = () => {
-        // Clear sign-up fields
+        // Reset sign-up form
         setEmail('');
         setUsername('');
         setPassword('');
@@ -93,7 +99,7 @@ function App() {
         setPasswordError('');
         setConfirmPasswordError('');
 
-        // Reset password checks
+        // Reset checks
         setHasMinLength(false);
         setHasUppercase(false);
         setHasNumber(false);
@@ -116,7 +122,7 @@ function App() {
     // ===== VALIDATIONS =====
     const validateEmail = (value: string) => {
         setEmail(value);
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
         if (!emailRegex.test(value)) {
             setEmailError('Invalid email format');
         } else {
@@ -124,7 +130,7 @@ function App() {
         }
     };
 
-    // Updated username validation: only alphanumeric + underscore + dot
+    // Only letters, digits, underscores, periods; min length 3
     const validateUsername = (value: string) => {
         const usernameRegex = /^[A-Za-z0-9._]+$/;
         if (!usernameRegex.test(value)) {
@@ -168,13 +174,13 @@ function App() {
         }
     };
 
-    // ====== SIGN-UP SUBMISSION ======
+    // ====== SIGN-UP SUBMISSION =====
     const handleSignUpSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Basic client-side checks
+        // Basic client checks
         if (emailError || usernameError || passwordError || confirmPasswordError) {
-            alert('Please fix the errors before submitting.');
+            alert('Please fix errors before submitting.');
             return;
         }
 
@@ -212,7 +218,6 @@ function App() {
 
             if (response.ok) {
                 alert('Sign-up successful!');
-                // Navigate to doc creation
                 navigate('/tutorial');
                 handleCloseSignUp();
             } else {
@@ -225,7 +230,7 @@ function App() {
         }
     };
 
-    // ====== LOGIN SUBMISSION (USERNAME + PASSWORD) ======
+    // ====== LOGIN SUBMISSION =====
     const handleLoginSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -257,10 +262,7 @@ function App() {
                 setLoggedInUser(username);
                 alert('Logged in successfully!');
                 handleCloseLogin();
-
-                // Navigate to doc creation page
                 navigate('/tutorial');
-
             } else {
                 const msg = data.message || 'Unknown error';
                 alert(`Login failed: ${msg}`);
@@ -271,10 +273,22 @@ function App() {
         }
     };
 
-    // ====== LOG OUT ======
+    // ====== LOG OUT =====
     const handleLogout = () => {
         localStorage.removeItem('myAppToken');
         setLoggedInUser(null);
+        setIsMenuOpen(false);
+    };
+
+    // Toggles the nav menu
+    const toggleMenu = () => {
+        setIsMenuOpen(!isMenuOpen);
+    };
+
+    // When user clicks a menu item, navigate and close
+    const handleMenuItemClick = (path: string) => {
+        navigate(path);
+        setIsMenuOpen(false);
     };
 
     return (
@@ -286,13 +300,50 @@ function App() {
                 </div>
                 <div className="nav-right">
                     {loggedInUser ? (
-                        <>
-                            <span className="nav-username">Hello, {loggedInUser}!</span>
-                            <button className="nav-btn" onClick={handleLogout}>
-                                Log Out
-                            </button>
-                        </>
+                        <nav className="nav-container">
+                            {/* Single burger icon (click to open/close) */}
+                            <div className="burger-icon" onClick={toggleMenu}>
+                                <FiMenu size={24} />
+                            </div>
+
+                            {/* If menu is open, show items below the icon (aligned right) */}
+                            {isMenuOpen && (
+                                <div className="nav-items">
+                                    <div
+                                        className="nav-item"
+                                        onClick={() => handleMenuItemClick('/dashboard')}
+                                    >
+                                        Dashboard
+                                    </div>
+                                    <div
+                                        className="nav-item"
+                                        onClick={() => handleMenuItemClick('/documents')}
+                                    >
+                                        My Documents
+                                    </div>
+                                    <div
+                                        className="nav-item"
+                                        onClick={() => handleMenuItemClick('/settings')}
+                                    >
+                                        Settings
+                                    </div>
+                                    <div
+                                        className="nav-item"
+                                        onClick={() => handleMenuItemClick('/faq')}
+                                    >
+                                        FAQ
+                                    </div>
+                                    <div
+                                        className="nav-item"
+                                        onClick={handleLogout}
+                                    >
+                                        Logout
+                                    </div>
+                                </div>
+                            )}
+                        </nav>
                     ) : (
+                        // If not logged in, show Log In / Sign Up
                         <>
                             <button className="nav-btn" onClick={handleOpenLogin}>
                                 Log In
@@ -343,8 +394,9 @@ function App() {
                 </div>
                 <div className="info-text">
                     <h3>
-                        Create manuals that use <span className="text-teal">code sectioning</span>. Documenting only the idea of
-                        selected parts<span className="asterisk">*</span>
+                        Create manuals that use <span className="text-teal">code sectioning</span>.
+                        Document only the idea of selected parts
+                        <span className="asterisk">*</span>
                     </h3>
                     <p className="note">
                         <span className="asterisk">*</span> Code documentation and{' '}
@@ -456,7 +508,6 @@ function App() {
                                         At least 8 characters
                                     </label>
                                 </div>
-
                                 <div className="criteria-item">
                                     <input
                                         type="checkbox"
@@ -469,7 +520,6 @@ function App() {
                                         At least 1 uppercase letter
                                     </label>
                                 </div>
-
                                 <div className="criteria-item">
                                     <input
                                         type="checkbox"
@@ -482,7 +532,6 @@ function App() {
                                         At least 1 number
                                     </label>
                                 </div>
-
                                 <div className="criteria-item">
                                     <input
                                         type="checkbox"
