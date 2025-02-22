@@ -67,7 +67,7 @@ function App() {
 
     /**
      * On mount, check if there's a token in localStorage.
-     * In production, you'd handle session IDs or cookies differently.
+     * In production, you'd handle sessions differently.
      */
     useEffect(() => {
         const token = localStorage.getItem('myAppToken');
@@ -86,7 +86,7 @@ function App() {
     };
 
     const handleCloseSignUp = () => {
-        // Reset sign-up form
+        // Reset sign-up fields
         setEmail('');
         setUsername('');
         setPassword('');
@@ -99,7 +99,7 @@ function App() {
         setPasswordError('');
         setConfirmPasswordError('');
 
-        // Reset checks
+        // Reset password checks
         setHasMinLength(false);
         setHasUppercase(false);
         setHasNumber(false);
@@ -178,7 +178,7 @@ function App() {
     const handleSignUpSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Basic client checks
+        // Basic checks
         if (emailError || usernameError || passwordError || confirmPasswordError) {
             alert('Please fix errors before submitting.');
             return;
@@ -291,6 +291,17 @@ function App() {
         setIsMenuOpen(false);
     };
 
+    // === Overlay click to close the menu ===
+    // If we click outside the menu items, close it.
+    const handleOverlayClick = () => {
+        setIsMenuOpen(false);
+    };
+
+    // Stop clicks inside the menu from closing it.
+    const stopPropagation = (e: React.MouseEvent) => {
+        e.stopPropagation();
+    };
+
     return (
         <div className="landing-page">
             {/* Header / Navigation */}
@@ -305,42 +316,6 @@ function App() {
                             <div className="burger-icon" onClick={toggleMenu}>
                                 <FiMenu size={24} />
                             </div>
-
-                            {/* If menu is open, show items below the icon (aligned right) */}
-                            {isMenuOpen && (
-                                <div className="nav-items">
-                                    <div
-                                        className="nav-item"
-                                        onClick={() => handleMenuItemClick('/dashboard')}
-                                    >
-                                        Dashboard
-                                    </div>
-                                    <div
-                                        className="nav-item"
-                                        onClick={() => handleMenuItemClick('/documents')}
-                                    >
-                                        My Documents
-                                    </div>
-                                    <div
-                                        className="nav-item"
-                                        onClick={() => handleMenuItemClick('/settings')}
-                                    >
-                                        Settings
-                                    </div>
-                                    <div
-                                        className="nav-item"
-                                        onClick={() => handleMenuItemClick('/faq')}
-                                    >
-                                        FAQ
-                                    </div>
-                                    <div
-                                        className="nav-item"
-                                        onClick={handleLogout}
-                                    >
-                                        Logout
-                                    </div>
-                                </div>
-                            )}
                         </nav>
                     ) : (
                         // If not logged in, show Log In / Sign Up
@@ -355,6 +330,44 @@ function App() {
                     )}
                 </div>
             </header>
+
+            {/* If user is logged in AND menu is open, show overlay & menu */}
+            {loggedInUser && isMenuOpen && (
+                <div className="menu-overlay" onClick={handleOverlayClick}>
+                    <div className="nav-items" onClick={stopPropagation}>
+                        <div
+                            className="nav-item"
+                            onClick={() => handleMenuItemClick('/dashboard')}
+                        >
+                            Dashboard
+                        </div>
+                        <div
+                            className="nav-item"
+                            onClick={() => handleMenuItemClick('/documents')}
+                        >
+                            My Documents
+                        </div>
+                        <div
+                            className="nav-item"
+                            onClick={() => handleMenuItemClick('/settings')}
+                        >
+                            Settings
+                        </div>
+                        <div
+                            className="nav-item"
+                            onClick={() => handleMenuItemClick('/faq')}
+                        >
+                            FAQ
+                        </div>
+                        <div
+                            className="nav-item"
+                            onClick={handleLogout}
+                        >
+                            Logout
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Hero Section */}
             <section className="hero">
