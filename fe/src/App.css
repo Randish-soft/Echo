@@ -256,3 +256,59 @@
   margin: 0;
 }
 
+/* Side Menu Overlay (covers entire screen) */
+.side-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* semi-transparent black to dim the background */
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 1000; /* above most content */
+}
+
+/* ... existing styles above ... */
+
+/* Navbar container (the immediate right section) */
+.nav-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-right: 1rem; /* optional spacing */
+}
+
+/* The main burger icon (always visible) */
+.burger-icon {
+  cursor: pointer;
+  padding: 0.5rem;
+  /* Add spacing, border, or background as needed */
+}
+
+/* The dropdown items container */
+.nav-items {
+  position: absolute;
+  top: 2.8rem; /* or enough to clear the icon */
+  right: 0;    /* so it aligns with the right side of the navbar */
+  background-color: #fff;
+  border: 1px solid #ccc;
+  min-width: 180px;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem;
+}
+
+/* Each nav item in the dropdown */
+.nav-item {
+  padding: 0.6rem;
+  margin: 0.2rem 0;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+/* Hover effect for nav items */
+.nav-item:hover {
+  background-color: #0EB8BE;
+  color: #fff;
+}
