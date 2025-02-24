@@ -1,8 +1,8 @@
 // router.tsx
 import { createBrowserRouter } from "react-router-dom";
 import App from "./App";
-import DocCreationPage from "./SignedUp/freetier/Doc-creation-page";
-import LinkGithubRepo from "./SignedUp/freetier/LinkGithubRepo";
+import DocCreationPage from "./SignedUp/Doc-creation-page.tsx";
+import LinkGithubRepo from "./SignedUp/LinkGithubRepo.tsx";
 import MyErrorBoundary from "./MyErrorBoundary";
 
 const router = createBrowserRouter([

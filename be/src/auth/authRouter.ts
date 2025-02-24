@@ -29,7 +29,7 @@ const asyncHandler =
 // STEP 1: Redirect user to GitHub's OAuth dialog
 router.get('/github', (req: Request, res: Response) => {
     // Where GitHub will redirect back to
-    const backendCallbackUrl = `http://localhost:${process.env.PORT || 5000}/auth/github/callback`;
+    const backendCallbackUrl = `http://localhost:${process.env.PORT || 5001}/auth/github/callback`;
 
     // Build GitHub’s authorize URL with your client_id, callback, scopes
     const authorizeUrl =

@@ -8,7 +8,8 @@ import authRouter from './auth/authRouter';  // <--- single router now
 import documentsRouter from './routes/documentsRouter';
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+// If no PORT in environment, default to 5001
+const PORT = process.env.PORT || 5001;
 
 app.use(cors());
 app.use(express.json());

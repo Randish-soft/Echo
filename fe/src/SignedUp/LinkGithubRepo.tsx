@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import "./CSS/repolinking.css";
-import "../../global-css/navbar.css"
+import "../global-css/navbar.css"
 /** Basic Repo interface to represent GitHub's response */
 interface Repo {
     id: number;
