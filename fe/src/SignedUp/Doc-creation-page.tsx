@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import "../../global-css/navbar.css";
+import "../global-css/navbar.css";
 import "./CSS/doc.css";
 
 interface DocItem {

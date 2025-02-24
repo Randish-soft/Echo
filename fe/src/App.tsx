@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiMenu } from 'react-icons/fi';
+import { FaGoogle, FaGithub } from 'react-icons/fa'; // <-- Import icons here
 import './App.css';
 import '../src/global-css/navbar.css';
 
@@ -122,7 +123,7 @@ function App() {
     // ===== VALIDATIONS =====
     const validateEmail = (value: string) => {
         setEmail(value);
-        const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(value)) {
             setEmailError('Invalid email format');
         } else {
@@ -172,6 +173,19 @@ function App() {
         } else {
             setConfirmPasswordError('');
         }
+    };
+
+    // ====== OAUTH HANDLERS =====
+    const handleGoogleSignIn = () => {
+        // You would typically redirect to your Google OAuth flow:
+        // e.g., window.location.href = 'http://your-backend/auth/google';
+        alert('Redirecting to Google OAuth...');
+    };
+
+    const handleGithubSignIn = () => {
+        // If you want to “save configuration” first, do that here.
+        // Otherwise, just navigate to the LinkGithubRepo page:
+        navigate('/linkGithubRepo');
     };
 
     // ====== SIGN-UP SUBMISSION =====
@@ -291,13 +305,12 @@ function App() {
         setIsMenuOpen(false);
     };
 
-    // === Overlay click to close the menu ===
-    // If we click outside the menu items, close it.
+    // Overlay click to close the menu
     const handleOverlayClick = () => {
         setIsMenuOpen(false);
     };
 
-    // Stop clicks inside the menu from closing it.
+    // Stop clicks inside the menu from closing it
     const stopPropagation = (e: React.MouseEvent) => {
         e.stopPropagation();
     };
@@ -359,10 +372,7 @@ function App() {
                         >
                             FAQ
                         </div>
-                        <div
-                            className="nav-item"
-                            onClick={handleLogout}
-                        >
+                        <div className="nav-item" onClick={handleLogout}>
                             Logout
                         </div>
                     </div>
@@ -387,7 +397,7 @@ function App() {
             {/* Info / Feature Section */}
             <section className="info-section">
                 <div className="code-tree-container">
-          <pre className="code-tree">
+                    <pre className="code-tree">
 {`Project
 ├── fe
 │   └── src
@@ -403,7 +413,7 @@ function App() {
 │   └── init.sql
 └── docker-compose.yml
 `}
-          </pre>
+                    </pre>
                 </div>
                 <div className="info-text">
                     <h3>
@@ -490,7 +500,9 @@ function App() {
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 className="signup-input"
                             />
-                            {confirmPasswordError && <p className="error-text">{confirmPasswordError}</p>}
+                            {confirmPasswordError && (
+                                <p className="error-text">{confirmPasswordError}</p>
+                            )}
 
                             {/* Remember password checkbox */}
                             <div className="remember-me-container">
@@ -504,6 +516,29 @@ function App() {
                                 <label htmlFor="rememberMe" className="remember-me-label">
                                     Remember password
                                 </label>
+                            </div>
+
+                            {/* === SOCIAL SIGN-IN BUTTONS BELOW CHECKBOX === */}
+                            <div className="social-signin-container">
+                                {/* Google Button */}
+                                <button
+                                    type="button"
+                                    className="social-btn google"
+                                    onClick={handleGoogleSignIn}
+                                >
+                                    <FaGoogle size={18} style={{ marginRight: '8px' }} />
+                                    Sign in with Google
+                                </button>
+
+                                {/* GitHub Button */}
+                                <button
+                                    type="button"
+                                    className="social-btn github"
+                                    onClick={handleGithubSignIn}
+                                >
+                                    <FaGithub size={18} style={{ marginRight: '8px' }} />
+                                    Sign in with GitHub
+                                </button>
                             </div>
 
                             {/* Password Criteria */}
