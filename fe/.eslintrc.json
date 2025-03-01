@@ -1,0 +1,30 @@
+// fe/.eslintrc.json
+{
+  "env": {
+    "browser": true, // so ESLint knows about 'window', 'btoa', 'HTMLSelectElement', etc.
+    "node": true     // so ESLint knows about 'NodeJS' types
+  },
+  "parser": "@typescript-eslint/parser", // parse TypeScript
+  "parserOptions": {
+    "project": "./tsconfig.json", // point to your TypeScript config
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "plugins": [
+    "@typescript-eslint",
+    "react"
+  ],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:react/recommended"
+  ],
+  "settings": {
+    "react": {
+      "version": "detect" // automatically pick the installed React version
+    }
+  },
+  "rules": {
+    // Add or override any rules you need here
+  }
+}

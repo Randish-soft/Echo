@@ -1,7 +1,31 @@
+// fe/tsconfig.json
 {
-  "files": [],
-  "references": [
-    { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
-  ]
+  "compilerOptions": {
+    // Target modern JS
+    "target": "ESNext",
+    // Use ESM modules (fine with Vite)
+    "module": "ESNext",
+
+    // Let TS know we have DOM APIs and ES features
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+
+    // Strict type-checking
+    "strict": true,
+
+    // So TS sees Node.js type definitions, e.g. NodeJS.Timeout
+    "types": ["node"],
+
+    // If you use Vite's recommended approach:
+    "moduleResolution": "bundler",
+    // Or if you prefer Node's new resolution:
+    // "moduleResolution": "nodenext",
+
+    // So TS recognizes .tsx with React
+    "jsx": "react-jsx",
+
+    // Don't emit compiled files; Vite handles bundling
+    "noEmit": true
+  },
+  // Put your .ts / .tsx files in src
+  "include": ["src"]
 }

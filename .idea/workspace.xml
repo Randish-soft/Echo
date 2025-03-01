@@ -5,15 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="12d91834-8b4d-457b-a51e-20b85f1bba68" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/fe/src/SignedUp/CSS/DocPage.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/fe/src/SignedUp/DocumentPage.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/fe/.eslintrc.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/src/SignedUp/CSS/repolinking.css" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/SignedUp/CSS/repolinking.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fe/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/fe/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fe/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/fe/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fe/src/SignedUp/CSS/doc.css" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/SignedUp/CSS/doc.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/fe/src/SignedUp/Doc-creation-page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/SignedUp/Doc-creation-page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/src/SignedUp/LinkGithubRepo.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/SignedUp/LinkGithubRepo.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/src/router.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/router.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fe/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/fe/tsconfig.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -151,7 +149,7 @@
       <workItem from="1740506563583" duration="3481000" />
       <workItem from="1740515785405" duration="599000" />
       <workItem from="1740561424659" duration="599000" />
-      <workItem from="1740824486655" duration="5416000" />
+      <workItem from="1740824486655" duration="10772000" />
     </task>
     <servers />
   </component>
