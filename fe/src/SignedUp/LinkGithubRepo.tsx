@@ -1,13 +1,13 @@
+/** fe/src/SignedUp/LinkGithubRepo.tsx */
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import "./CSS/repolinking.css";
-import "../global-css/navbar.css"
-/** Basic Repo interface to represent GitHub's response */
+import "../global-css/navbar.css";
+
 interface Repo {
     id: number;
     full_name: string;
     html_url: string;
-    // Add any other fields you need from GitHub's API
 }
 
 const LinkGithubRepo: React.FC = () => {
@@ -15,8 +15,8 @@ const LinkGithubRepo: React.FC = () => {
     const [repos, setRepos] = useState<Repo[]>([]);
     const [selectedRepo, setSelectedRepo] = useState<string | null>(null);
 
-    // We'll parse the URL to find ?token=...
     const location = useLocation();
+    const navigate = useNavigate();
 
     useEffect(() => {
         const urlParams = new URLSearchParams(location.search);
@@ -28,27 +28,19 @@ const LinkGithubRepo: React.FC = () => {
     }, [location.search]);
 
     /**
-     * If user hasn't yet authorized, we send them to your server’s
-     * GitHub OAuth route or directly to GitHub’s OAuth URL
-     * (depending on how you set up your flow).
+     * If user isn’t linked to GitHub yet, direct them to your OAuth route.
      */
     const handleGithubSignIn = () => {
-        // Example: redirect to your server route that initiates OAuth
-        // or directly to GitHub if you have a client-only flow
         window.location.href = 'http://localhost:5001/auth/github';
     };
 
     /**
-     * --- Fetch Repos from GitHub’s REST API ---
-     * GitHub’s list-your-repos endpoint: GET https://api.github.com/user/repos
-     * We pass the token in an Authorization header.
+     * Fetch user repos from GitHub using the token.
      */
     const fetchRepositories = async (accessToken: string) => {
         try {
             const response = await fetch('https://api.github.com/user/repos?per_page=100', {
                 headers: {
-                    // For OAuth app tokens, use 'token' or 'Bearer'
-                    // (GitHub accepts both). Example:
                     Authorization: `Bearer ${accessToken}`,
                 },
             });
@@ -62,33 +54,52 @@ const LinkGithubRepo: React.FC = () => {
         }
     };
 
-    const handleRepoSelect = (repoName: string) => {
-        setSelectedRepo(repoName);
-        // You can store this selection or navigate somewhere
-        alert(`You have linked to the repository: ${repoName}`);
+    /**
+     * When a user selects a repo, go to /document-page?repo=...&token=...
+     */
+    const handleRepoSelect = (repoFullName: string) => {
+        setSelectedRepo(repoFullName);
+        alert(`You have linked to the repository: ${repoFullName}`);
+        navigate(`/document-page?repo=${encodeURIComponent(repoFullName)}&token=${token || ''}`);
+    };
+
+    /**
+     * If user clicks the brand, go home ("/") or wherever you prefer
+     */
+    const handleBrandClick = () => {
+        navigate('/');
     };
 
     return (
         <div className="bg-light" style={{ minHeight: '100vh' }}>
-            <nav className="navbar navbar-light bg-white border-bottom px-3">
-                <span className="navbar-brand mb-0 h1">echo</span>
+            {/* CUSTOM NAVBAR (no more "navbar-light bg-white border-bottom px-3") */}
+            <nav className="navbar">
+                <h1 className="brand" onClick={handleBrandClick}>
+                    echo
+                </h1>
+                {/* Example of nav-right usage if you want extra buttons:
+        <div className="nav-right">
+          <button className="nav-btn" onClick={() => navigate('/somewhere')}>Docs</button>
+          <button className="nav-btn signup-btn" onClick={() => navigate('/signup')}>Sign Up</button>
+        </div>
+        */}
             </nav>
 
             <div className="main-container">
                 <div className="github-card">
-                    <h2 className="card-title">Let’s Link Your GitHub Repo :D</h2>
+                    {/* If no token, show “Link Up GitHub” button */}
                     {!token ? (
                         <button className="github-signin-btn" onClick={handleGithubSignIn}>
                             <span className="btn-text">Link Up Your GitHub</span>
                         </button>
                     ) : (
                         <div>
-                            <h3>Select a Repository:</h3>
+                            <h3> Please Select a Repository:</h3>
                             <ul className="repo-list">
                                 {repos.map((repo) => (
                                     <li key={repo.id}>
                                         <button
-                                            className="btn btn-outline-primary repo-btn"
+                                            className="repo-btn"
                                             onClick={() => handleRepoSelect(repo.full_name)}
                                         >
                                             {repo.full_name}

@@ -23,7 +23,7 @@ services:
       dockerfile: Dockerfile
     container_name: echo_backend
     ports:
-        - "5001:5000"
+        - "5001:5001"
     depends_on:
         db:
           condition: service_healthy

@@ -8,29 +8,29 @@
     min-height: 80vh;
 }
 
-/* Style for the card */
+/* Style for the card - auto-size width, remove fixed height */
 .github-card {
     text-align: center;
     background-color: #d9a7a7;
     padding: 2rem;
     border-radius: 8px;
-    width: 350px;
+    width: auto;
     max-width: 90%;
     position: relative;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
-    height: 250px;
+    /* Height auto so it can expand for many repos */
+    height: auto;
 }
 
 /* Card title */
 .card-title {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     font-size: 1.5rem;
 }
 
-/* Button styling */
+/* GitHub signin button (for linking GitHub if no token) */
 .github-signin-btn {
     display: flex;
     align-items: center;
@@ -44,7 +44,7 @@
     cursor: pointer;
     gap: 0.5rem;
     text-align: center;
-    width: 80%; /* Optional: Makes the button a bit wider */
+    width: 80%; /* optional, to make it nice and wide */
 }
 
 .github-signin-btn:hover {
@@ -56,17 +56,36 @@
     text-align: center;
 }
 
-/* (Optional) Repo list styling */
+/* Repo list styling */
 .repo-list {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch; /* ensures all child .repo-btn match the widest button */
     list-style: none;
     padding-left: 0;
     margin: 1rem 0;
 }
 
+/* Each button is white with black text, same width as the largest text */
 .repo-btn {
+    background-color: #fff;
+    color: #000;
+    border: 1px solid #999;
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    cursor: pointer;
     margin-bottom: 0.5rem;
+    text-align: center;
+    white-space: nowrap;     /* keep text on one line */
 }
 
+/* On hover, you could darken the border or background, if desired: */
+.repo-btn:hover {
+    background-color: #f0f0f0;
+}
+
+/* Selected repo message */
 .selected-repo {
     margin-top: 0.5rem;
     font-style: italic;
