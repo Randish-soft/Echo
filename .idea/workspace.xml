@@ -5,17 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="12d91834-8b4d-457b-a51e-20b85f1bba68" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/fe/src/SignedUp/CSS/DocPage.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/fe/src/SignedUp/DocumentPage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/be/src/auth/authRouter.ts" beforeDir="false" afterPath="$PROJECT_DIR$/be/src/auth/authRouter.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/be/src/routes/githubAuthRouter.ts" beforeDir="false" afterPath="$PROJECT_DIR$/be/src/routes/githubAuthRouter.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/be/src/server.ts" beforeDir="false" afterPath="$PROJECT_DIR$/be/src/server.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/fe/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/fe/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/src/SignedUp/freetier/CSS/doc.css" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/SignedUp/CSS/doc.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/src/SignedUp/freetier/CSS/repolinking.css" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/SignedUp/CSS/repolinking.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/src/SignedUp/freetier/Doc-creation-page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/SignedUp/Doc-creation-page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/src/SignedUp/freetier/LinkGithubRepo.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/SignedUp/LinkGithubRepo.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fe/src/SignedUp/CSS/repolinking.css" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/SignedUp/CSS/repolinking.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fe/src/SignedUp/Doc-creation-page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/SignedUp/Doc-creation-page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fe/src/SignedUp/LinkGithubRepo.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/SignedUp/LinkGithubRepo.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/fe/src/router.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/router.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -27,16 +24,16 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Dockerfile" />
+        <option value="TypeScript File" />
         <option value="TypeScript JSX File" />
         <option value="CSS File" />
-        <option value="TypeScript File" />
       </list>
     </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="main" />
+        <entry key="$PROJECT_DIR$" value="Production-ver" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -64,7 +61,7 @@
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;fe/app/creatingadoc&quot;,
     &quot;last_opened_file_path&quot;: &quot;/Users/miguelibrahim/Desktop/Echo&quot;,
     &quot;list.type.of.created.stylesheet&quot;: &quot;CSS&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
@@ -149,7 +146,12 @@
       <workItem from="1740339055758" duration="59000" />
       <workItem from="1740340806042" duration="599000" />
       <workItem from="1740401508760" duration="2629000" />
-      <workItem from="1740422525009" duration="940000" />
+      <workItem from="1740422525009" duration="1701000" />
+      <workItem from="1740429933326" duration="3000" />
+      <workItem from="1740506563583" duration="3481000" />
+      <workItem from="1740515785405" duration="599000" />
+      <workItem from="1740561424659" duration="599000" />
+      <workItem from="1740824486655" duration="5416000" />
     </task>
     <servers />
   </component>
@@ -167,7 +169,7 @@
                   <entry key="branch">
                     <value>
                       <list>
-                        <option value="origin/main" />
+                        <option value="fe/app/creatingadoc" />
                       </list>
                     </value>
                   </entry>
