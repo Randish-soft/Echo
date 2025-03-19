@@ -17,7 +17,7 @@ $$;
 -- 3) Create 'users' table if it doesn't exist
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
-  username VARCHAR(50) NOT NULL UNIQUE,  -- <-- ADDED THIS LINE
+  username VARCHAR(50) NOT NULL UNIQUE,
   email VARCHAR(100) NOT NULL UNIQUE,
   password VARCHAR(200) NOT NULL
 );
@@ -36,6 +36,13 @@ CREATE TABLE IF NOT EXISTS documents (
     REFERENCES users (id)
     ON DELETE CASCADE
 );
+
+-- (NEW) Add columns for GitHub repo and branch if they don’t exist
+ALTER TABLE documents
+  ADD COLUMN IF NOT EXISTS repo_full_name TEXT;
+
+ALTER TABLE documents
+  ADD COLUMN IF NOT EXISTS branch_name TEXT;
 
 -- 5) Create 'document_shares' table if it doesn't exist
 CREATE TABLE IF NOT EXISTS document_shares (

@@ -1,22 +1,17 @@
+// fe/src/App.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiMenu } from 'react-icons/fi';
-import { FaGoogle, FaGithub } from 'react-icons/fa'; // <-- Import icons here
+import { FaGoogle, FaGithub } from 'react-icons/fa';
 import './App.css';
 import '../src/global-css/navbar.css';
 
-/**
- * Interface for your backend's JSON shape.
- */
 interface ApiResponse {
     message?: string;
     token?: string;
     username?: string;
 }
 
-/**
- * Helper to decode a JWT using `atob`.
- */
 function parseJwt(token: string) {
     try {
         const base64Payload = token.split('.')[1];
@@ -31,17 +26,17 @@ function parseJwt(token: string) {
 function App() {
     const navigate = useNavigate();
 
-    // ===== MODAL STATES =====
+    // Modals
     const [isSignUpOpen, setIsSignUpOpen] = useState(false);
     const [isLoginOpen, setIsLoginOpen] = useState(false);
 
-    // ===== LOGGED-IN USER =====
+    // User
     const [loggedInUser, setLoggedInUser] = useState<string | null>(null);
 
-    // ===== NAV MENU STATE =====
+    // Nav menu
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-    // ===== SIGN-UP FORM FIELDS =====
+    // Sign-up fields
     const [email, setEmail] = useState('');
     const [emailError, setEmailError] = useState('');
 
@@ -56,20 +51,16 @@ function App() {
 
     const [rememberMe, setRememberMe] = useState(false);
 
-    // ===== PASSWORD STRENGTH CHECKS =====
+    // Password strength
     const [hasMinLength, setHasMinLength] = useState(false);
     const [hasUppercase, setHasUppercase] = useState(false);
     const [hasNumber, setHasNumber] = useState(false);
     const [hasSpecialChar, setHasSpecialChar] = useState(false);
 
-    // ===== LOGIN FORM FIELDS =====
+    // Login form
     const [loginUsername, setLoginUsername] = useState('');
     const [loginPassword, setLoginPassword] = useState('');
 
-    /**
-     * On mount, check if there's a token in localStorage.
-     * In production, you'd handle sessions differently.
-     */
     useEffect(() => {
         const token = localStorage.getItem('myAppToken');
         if (token) {
@@ -80,47 +71,39 @@ function App() {
         }
     }, []);
 
-    // ====== MODAL HANDLERS =====
+    // Modal toggles
     const handleOpenSignUp = () => {
         setIsSignUpOpen(true);
         setIsLoginOpen(false);
     };
-
     const handleCloseSignUp = () => {
-        // Reset sign-up fields
+        // reset
         setEmail('');
         setUsername('');
         setPassword('');
         setConfirmPassword('');
         setRememberMe(false);
-
-        // Reset errors
         setEmailError('');
         setUsernameError('');
         setPasswordError('');
         setConfirmPasswordError('');
-
-        // Reset password checks
         setHasMinLength(false);
         setHasUppercase(false);
         setHasNumber(false);
         setHasSpecialChar(false);
-
         setIsSignUpOpen(false);
     };
-
     const handleOpenLogin = () => {
         setIsLoginOpen(true);
         setIsSignUpOpen(false);
     };
-
     const handleCloseLogin = () => {
         setLoginUsername('');
         setLoginPassword('');
         setIsLoginOpen(false);
     };
 
-    // ===== VALIDATIONS =====
+    // Validations
     const validateEmail = (value: string) => {
         setEmail(value);
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -131,13 +114,10 @@ function App() {
         }
     };
 
-    // Only letters, digits, underscores, periods; min length 3
     const validateUsername = (value: string) => {
         const usernameRegex = /^[A-Za-z0-9._]+$/;
         if (!usernameRegex.test(value)) {
-            setUsernameError(
-                'Username can only contain letters, digits, underscores, and periods.'
-            );
+            setUsernameError('Username can only contain letters, digits, underscores, and periods.');
         } else if (value.trim().length < 3) {
             setUsernameError('Username must be at least 3 characters long.');
         } else {
@@ -175,54 +155,41 @@ function App() {
         }
     };
 
-    // ====== OAUTH HANDLERS =====
+    // OAuth handlers
     const handleGoogleSignIn = () => {
-        // You would typically redirect to your Google OAuth flow:
-        // e.g., window.location.href = 'http://your-backend/auth/google';
         alert('Redirecting to Google OAuth...');
     };
-
     const handleGithubSignIn = () => {
-        // If you want to “save configuration” first, do that here.
-        // Otherwise, just navigate to the LinkGithubRepo page:
-        navigate('/linkGithubRepo');
+        // We can route to /linkGithubRepo if we want
+        navigate('/link-github');
     };
 
-    // ====== SIGN-UP SUBMISSION =====
+    // SIGN-UP
     const handleSignUpSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        // Basic checks
         if (emailError || usernameError || passwordError || confirmPasswordError) {
             alert('Please fix errors before submitting.');
             return;
         }
-
         if (!username) {
             setUsernameError('Username is required');
             return;
         }
-
         if (password !== confirmPassword) {
             setConfirmPasswordError('Passwords do not match');
             return;
         }
-
         if (!hasMinLength || !hasUppercase || !hasNumber || !hasSpecialChar) {
             alert('Please meet all password criteria.');
             return;
         }
-
         try {
-            const response = await fetch(
-                `${import.meta.env.VITE_API_BASE_URL}/auth/signup`,
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, username, password, rememberMe }),
-                }
-            );
-
+            // Adjust to your actual backend signup endpoint
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/signup`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, username, password, rememberMe }),
+            });
             let data: ApiResponse = {};
             try {
                 data = await response.json();
@@ -231,8 +198,9 @@ function App() {
             }
 
             if (response.ok) {
+                // On success, let's route them to /link-github
                 alert('Sign-up successful!');
-                navigate('/tutorial');
+                navigate('/link-github'); // <== changed from /tutorial
                 handleCloseSignUp();
             } else {
                 const msg = data.message || 'Unknown error';
@@ -244,25 +212,20 @@ function App() {
         }
     };
 
-    // ====== LOGIN SUBMISSION =====
+    // LOGIN
     const handleLoginSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
         try {
-            const response = await fetch(
-                `${import.meta.env.VITE_API_BASE_URL}/auth/login`,
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: loginUsername, password: loginPassword }),
-                }
-            );
-
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: loginUsername, password: loginPassword }),
+            });
             let data: ApiResponse = {};
             try {
                 data = await response.json();
             } catch (jsonErr) {
-                console.error('Error reading JSON from login response:', jsonErr);
+                console.error('Error reading JSON:', jsonErr);
             }
 
             if (response.ok) {
@@ -271,12 +234,12 @@ function App() {
                     alert('Login failed: no token or username returned by server.');
                     return;
                 }
-
                 localStorage.setItem('myAppToken', token);
                 setLoggedInUser(username);
                 alert('Logged in successfully!');
                 handleCloseLogin();
-                navigate('/tutorial');
+                // After login, we could also route them to /link-github
+                navigate('/link-github');
             } else {
                 const msg = data.message || 'Unknown error';
                 alert(`Login failed: ${msg}`);
@@ -287,33 +250,21 @@ function App() {
         }
     };
 
-    // ====== LOG OUT =====
+    // LOG OUT
     const handleLogout = () => {
         localStorage.removeItem('myAppToken');
         setLoggedInUser(null);
         setIsMenuOpen(false);
     };
 
-    // Toggles the nav menu
-    const toggleMenu = () => {
-        setIsMenuOpen(!isMenuOpen);
-    };
-
-    // When user clicks a menu item, navigate and close
+    // Nav menu toggles
+    const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
     const handleMenuItemClick = (path: string) => {
         navigate(path);
         setIsMenuOpen(false);
     };
-
-    // Overlay click to close the menu
-    const handleOverlayClick = () => {
-        setIsMenuOpen(false);
-    };
-
-    // Stop clicks inside the menu from closing it
-    const stopPropagation = (e: React.MouseEvent) => {
-        e.stopPropagation();
-    };
+    const handleOverlayClick = () => setIsMenuOpen(false);
+    const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
 
     return (
         <div className="landing-page">
@@ -325,13 +276,11 @@ function App() {
                 <div className="nav-right">
                     {loggedInUser ? (
                         <nav className="nav-container">
-                            {/* Single burger icon (click to open/close) */}
                             <div className="burger-icon" onClick={toggleMenu}>
                                 <FiMenu size={24} />
                             </div>
                         </nav>
                     ) : (
-                        // If not logged in, show Log In / Sign Up
                         <>
                             <button className="nav-btn" onClick={handleOpenLogin}>
                                 Log In
@@ -344,7 +293,6 @@ function App() {
                 </div>
             </header>
 
-            {/* If user is logged in AND menu is open, show overlay & menu */}
             {loggedInUser && isMenuOpen && (
                 <div className="menu-overlay" onClick={handleOverlayClick}>
                     <div className="nav-items" onClick={stopPropagation}>
@@ -404,11 +352,11 @@ function App() {
 ├── be
 │   └── app
 │       └── Pages
-│          └──App.tsx
-│       └──CSS
-│          ├──Navbar.css
-│          ├──searchbar.css
-│          └──ColorPalette.css
+│          └── App.tsx
+│       └── CSS
+│          ├── Navbar.css
+│          ├── searchbar.css
+│          └── ColorPalette.css
 ├── DB
 │   └── init.sql
 └── docker-compose.yml
@@ -441,7 +389,7 @@ function App() {
                         </div>
 
                         <form onSubmit={handleSignUpSubmit} className="signup-form">
-                            {/* Username Field */}
+                            {/* Username */}
                             <label htmlFor="username" className="signup-label">
                                 Username <span className="required-asterisk">*</span>
                             </label>
@@ -457,7 +405,7 @@ function App() {
                             />
                             {usernameError && <p className="error-text">{usernameError}</p>}
 
-                            {/* Email Field */}
+                            {/* Email */}
                             <label htmlFor="email" className="signup-label">
                                 Email <span className="required-asterisk">*</span>
                             </label>
@@ -473,7 +421,7 @@ function App() {
                             />
                             {emailError && <p className="error-text">{emailError}</p>}
 
-                            {/* Password Field */}
+                            {/* Password */}
                             <label htmlFor="password" className="signup-label">
                                 Password <span className="required-asterisk">*</span>
                             </label>
@@ -504,7 +452,7 @@ function App() {
                                 <p className="error-text">{confirmPasswordError}</p>
                             )}
 
-                            {/* Remember password checkbox */}
+                            {/* Remember check */}
                             <div className="remember-me-container">
                                 <input
                                     type="checkbox"
@@ -518,9 +466,8 @@ function App() {
                                 </label>
                             </div>
 
-                            {/* === SOCIAL SIGN-IN BUTTONS BELOW CHECKBOX === */}
+                            {/* Social sign-in */}
                             <div className="social-signin-container">
-                                {/* Google Button */}
                                 <button
                                     type="button"
                                     className="social-btn google"
@@ -529,8 +476,6 @@ function App() {
                                     <FaGoogle size={18} style={{ marginRight: '8px' }} />
                                     Sign in with Google
                                 </button>
-
-                                {/* GitHub Button */}
                                 <button
                                     type="button"
                                     className="social-btn github"
@@ -602,20 +547,17 @@ function App() {
                 </div>
             )}
 
-            {/* LOGIN MODAL (USERNAME + PASSWORD) */}
+            {/* LOGIN MODAL */}
             {isLoginOpen && (
                 <div className="modal-overlay" onClick={handleCloseLogin}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <button className="close-btn" onClick={handleCloseLogin}>
                             ×
                         </button>
-
                         <div className="thank-you-section">
                             <p className="thank-you-text">Welcome Back!</p>
                         </div>
-
                         <form onSubmit={handleLoginSubmit} className="login-form">
-                            {/* Username Field */}
                             <label htmlFor="loginUsername" className="login-label">
                                 Username <span className="required-asterisk">*</span>
                             </label>
@@ -628,8 +570,6 @@ function App() {
                                 onChange={(e) => setLoginUsername(e.target.value)}
                                 className="login-input"
                             />
-
-                            {/* Password Field */}
                             <label htmlFor="loginPassword" className="login-label">
                                 Password <span className="required-asterisk">*</span>
                             </label>
@@ -642,7 +582,6 @@ function App() {
                                 onChange={(e) => setLoginPassword(e.target.value)}
                                 className="login-input"
                             />
-
                             <button type="submit" className="cta-btn submit-btn">
                                 Log In
                             </button>

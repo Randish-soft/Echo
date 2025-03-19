@@ -4,7 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="12d91834-8b4d-457b-a51e-20b85f1bba68" name="Changes" comment="" />
+    <list default="true" id="12d91834-8b4d-457b-a51e-20b85f1bba68" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/be/src/routes/documentsRouter.ts" beforeDir="false" afterPath="$PROJECT_DIR$/be/src/routes/documentsRouter.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/db/init.sql" beforeDir="false" afterPath="$PROJECT_DIR$/db/init.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fe/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/App.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fe/src/SignedUp/DocumentPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/SignedUp/DocumentPage.tsx" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -14,9 +20,9 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Dockerfile" />
-        <option value="TypeScript File" />
         <option value="TypeScript JSX File" />
         <option value="CSS File" />
+        <option value="TypeScript File" />
       </list>
     </option>
   </component>
@@ -51,7 +57,7 @@
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;fe/app/creatingadoc&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;last_opened_file_path&quot;: &quot;/Users/miguelibrahim/Desktop/Echo&quot;,
     &quot;list.type.of.created.stylesheet&quot;: &quot;CSS&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
@@ -142,6 +148,16 @@
       <workItem from="1740515785405" duration="599000" />
       <workItem from="1740561424659" duration="599000" />
       <workItem from="1740824486655" duration="11398000" />
+      <workItem from="1740861081808" duration="23000" />
+      <workItem from="1740861650681" duration="26000" />
+      <workItem from="1741292760343" duration="9000" />
+      <workItem from="1741365309825" duration="3161000" />
+      <workItem from="1741371740097" duration="1171000" />
+      <workItem from="1741607396526" duration="8000" />
+      <workItem from="1741627329072" duration="130000" />
+      <workItem from="1742122274606" duration="650000" />
+      <workItem from="1742203422764" duration="193000" />
+      <workItem from="1742371497966" duration="7544000" />
     </task>
     <servers />
   </component>
