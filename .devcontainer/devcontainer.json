@@ -1,0 +1,19 @@
+{
+  "name": "Dagster Dev Container",
+  "dockerFile": "Dockerfile",
+  "context": "..",  // Context is the root of the project, adjust if needed
+  "forwardPorts": [3000, 5001, 5173],  // Ports for Dagit, backend, frontend
+  "postCreateCommand": "pip install -r requirements.txt",  // Install the dependencies
+  "settings": {
+    "python.pythonPath": "/usr/local/bin/python"
+  },
+  "extensions": [
+    "ms-python.python",  // Python extension
+    "ms-vscode-remote.remote-containers"  // Remote containers extension
+  ],
+  "mounts": [
+    "source=${workspaceFolder}/be,target=/workspace/be,type=bind",
+    "source=${workspaceFolder}/fe,target=/workspace/fe,type=bind",
+    "source=${workspaceFolder}/pipeline,target=/workspace/pipeline,type=bind"
+  ]
+}
