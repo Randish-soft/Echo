@@ -4,3 +4,7 @@ echography.pem
 .pem
 *.env
 .env
+venv
+bin
+include
+lib

@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   db:
     image: postgres:15
@@ -23,23 +25,23 @@ services:
       dockerfile: Dockerfile
     container_name: echo_backend
     ports:
-        - "5001:5001"
+      - "5001:5001"
     depends_on:
-        db:
-          condition: service_healthy
+      db:
+        condition: service_healthy
     environment:
-        PGHOST: db
-        PGUSER: postgres
-        PGPASSWORD: postgres
-        PGDATABASE: mydb
-        PGPORT: 5432
-        JWT_SECRET: supersecretkey123
+      PGHOST: ${PGHOST}
+      PGUSER: ${PGUSER}
+      PGPASSWORD: ${PGPASSWORD}
+      PGDATABASE: ${PGDATABASE}
+      PGPORT: ${PGPORT}
+      JWT_SECRET: ${JWT_SECRET}
 
-        # GitHub OAuth
-        GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
-        GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
-        FRONTEND_URL: ${FRONTEND_URL}
-        PORT: 5001
+      # GitHub OAuth
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
+      FRONTEND_URL: ${FRONTEND_URL}
+      PORT: ${PORT}
 
   frontend:
     build:
@@ -60,3 +62,24 @@ services:
       #    create an anonymous volume so you don't overwrite it with your host
       #    This ensures Docker doesn't blow away node_modules with an empty local folder
       - /app/node_modules
+
+  code-analysis:
+    build:
+      context: ./code-analysis-pipeline  # Path to your code analysis folder
+      dockerfile: Dockerfile  # Dockerfile for code analysis container
+    container_name: code_analysis
+    environment:
+      GITHUB_REPO_URL: ${GITHUB_REPO_URL}  # Repo URL to clone and analyze
+    depends_on:
+      - backend
+    volumes:
+      - ./be:/repo/be
+      - ./fe:/repo/fe
+      - ./db:/repo/db
+    entrypoint: ["python3", "repo_analyzer.py"]  # Run the code analysis script
+    networks:
+      - backend_network
+
+networks:
+  backend_network:
+    driver: bridge
