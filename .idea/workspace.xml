@@ -4,13 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="12d91834-8b4d-457b-a51e-20b85f1bba68" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/pipeline/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pipeline/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-    </list>
+    <list default="true" id="12d91834-8b4d-457b-a51e-20b85f1bba68" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -157,7 +151,7 @@
       <workItem from="1741627329072" duration="130000" />
       <workItem from="1742122274606" duration="650000" />
       <workItem from="1742203422764" duration="193000" />
-      <workItem from="1742371497966" duration="8620000" />
+      <workItem from="1742371497966" duration="8930000" />
     </task>
     <servers />
   </component>

@@ -1,7 +1,7 @@
-from dagster import job, op, In, Out, Field, String
-import os
+from dagster import job, op, In, Out, String, Field
 import subprocess
 from dagster_docker import docker_executor
+import os
 
 # Define the code analysis operation
 @op(

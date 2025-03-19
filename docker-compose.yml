@@ -65,7 +65,7 @@ services:
 
   code-analysis:
     build:
-      context: ./code-analysis-pipeline  # Path to your code analysis folder
+      context: ./pipeline  # Path to your code analysis folder
       dockerfile: Dockerfile  # Dockerfile for code analysis container
     container_name: code_analysis
     environment:
