@@ -31,17 +31,17 @@ def code_analysis_op(context):
 
     return {"status": "success"}
 
+
 # Define a Dagster job that runs the code analysis operation
 @job(
-    executor=docker_executor.configured(
+    executor_def=docker_executor.configured(
         {
-            "image": "python:3.9-slim",  # Use a Python image for the analysis task
+            "image": "python:3.9-slim",  # Python image for the analysis
             "env_vars": {
-                "GITHUB_REPO_URL": "https://github.com/your-username/your-repo.git",  # Add your GitHub repo URL
+                "GITHUB_REPO_URL": "https://github.com/your-username/your-repo.git",
             },
         }
     )
 )
 def run_code_analysis_pipeline():
     code_analysis_op()
-
