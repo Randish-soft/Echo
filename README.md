@@ -20,3 +20,10 @@ To install and set up the project, follow these steps:
    ```sh
    docker-compose up
    ```
+
+
+## To Use with Devcontainer and pipeline 
+Type: Control + Shift + P for Windows or Command + Shift + P on Mac
+
+Type: Remote-Containers: Reopen in Container
+

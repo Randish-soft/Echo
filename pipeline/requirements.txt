@@ -1,0 +1,7 @@
+dagster
+dagit
+dagster-docker
+transformers
+torch
+requests
+gitpython
