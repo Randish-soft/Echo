@@ -1,0 +1,13 @@
+node_modules
+env
+echography.pem
+.pem
+*.env
+.env
+.venv
+bin
+include
+lib
+.tmp_dagster_home_zj3qzcmu
+venv
+__pycache__
