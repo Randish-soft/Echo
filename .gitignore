@@ -11,3 +11,4 @@ lib
 .tmp_dagster_home_zj3qzcmu
 venv
 __pycache__
+.idea
