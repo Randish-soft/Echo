@@ -6,10 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="12d91834-8b4d-457b-a51e-20b85f1bba68" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/be/src/routes/documentsRouter.ts" beforeDir="false" afterPath="$PROJECT_DIR$/be/src/routes/documentsRouter.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/db/init.sql" beforeDir="false" afterPath="$PROJECT_DIR$/db/init.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fe/src/SignedUp/DocumentPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/fe/src/SignedUp/DocumentPage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -19,17 +16,18 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Dockerfile" />
         <option value="TypeScript JSX File" />
         <option value="CSS File" />
         <option value="TypeScript File" />
+        <option value="Python Script" />
+        <option value="Dockerfile" />
       </list>
     </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="Production-ver" />
+        <entry key="$PROJECT_DIR$" value="main" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -56,8 +54,9 @@
   </component>
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
+    &quot;Docker..devcontainer/Dockerfile.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;Be/implementing-pipeline&quot;,
     &quot;last_opened_file_path&quot;: &quot;/Users/miguelibrahim/Desktop/Echo&quot;,
     &quot;list.type.of.created.stylesheet&quot;: &quot;CSS&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
@@ -157,7 +156,8 @@
       <workItem from="1741627329072" duration="130000" />
       <workItem from="1742122274606" duration="650000" />
       <workItem from="1742203422764" duration="193000" />
-      <workItem from="1742371497966" duration="7544000" />
+      <workItem from="1742371497966" duration="9696000" />
+      <workItem from="1742669680299" duration="641000" />
     </task>
     <servers />
   </component>
@@ -175,7 +175,7 @@
                   <entry key="branch">
                     <value>
                       <list>
-                        <option value="fe/app/creatingadoc" />
+                        <option value="Be/implementing-pipeline" />
                       </list>
                     </value>
                   </entry>
