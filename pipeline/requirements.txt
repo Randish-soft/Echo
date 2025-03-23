@@ -1,7 +1,13 @@
+# Dagster
 dagster
 dagit
 dagster-docker
+
+# LLM + Hugging Face
 transformers
 torch
+
+# Others
 requests
 gitpython
+psycopg2-binary

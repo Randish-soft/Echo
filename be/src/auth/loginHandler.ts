@@ -1,46 +1,57 @@
 import { RequestHandler } from "express";
-import bcrypt from "bcryptjs";  // For password hashing
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { Pool } from "pg";       // PostgreSQL pool
+import { Pool } from "pg";
+import { exec } from "child_process";
 
-// Make sure your .env has PGHOST, PGUSER, etc. set
 const pool = new Pool();
 
 export const loginHandler: RequestHandler = async (req, res) => {
     const { username, password } = req.body;
 
-    // Basic checks
     if (!username || !password) {
-        res.status(400).json({ message: "Username and password are required." });
-        return;  // Stop function execution
+        return res.status(400).json({ message: "Username and password are required." });
     }
 
     try {
-        // Query the DB for a user with "email" matching "username"
+        // 1) Check user in DB
         const result = await pool.query("SELECT * FROM users WHERE email = $1", [username]);
         const user = result.rows[0];
-
-        // If no user found
         if (!user) {
-            res.status(401).json({ message: "Invalid username or password." });
-            return;
+            return res.status(401).json({ message: "Invalid username or password." });
         }
 
-        // Compare the password with the stored hash
+        // 2) Compare password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            res.status(401).json({ message: "Invalid username or password." });
-            return;
+            return res.status(401).json({ message: "Invalid username or password." });
         }
 
-        // Generate a JWT token
+        // 3) Generate JWT
         const token = jwt.sign(
-            { id: user.id, username: user.email },   // payload
-            process.env.JWT_SECRET!,                 // secret key (make sure it's in .env)
-            { expiresIn: "1h" }                     // token expiry
+            { id: user.id, username: user.email },
+            process.env.JWT_SECRET!,
+            { expiresIn: "1h" }
         );
 
-        // Send success response with token
+        // 4) (Optional) Kick off the pipeline analysis
+        //    This assumes your pipeline.py is in /app (or somewhere accessible)
+        //    and that dagster is installed inside this container.
+        exec(
+            "dagster job execute -f /app/pipeline.py -j run_code_analysis_pipeline",
+            (error, stdout, stderr) => {
+                if (error) {
+                    console.error("Error running pipeline:", error);
+                } else {
+                    console.log("Pipeline stdout:", stdout);
+                    if (stderr) {
+                        console.error("Pipeline stderr:", stderr);
+                    }
+                }
+            }
+        );
+
+        // 5) Send success response
         res.status(200).json({ token, username: user.email });
     } catch (error) {
         console.error("Login error:", error);

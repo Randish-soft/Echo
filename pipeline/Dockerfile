@@ -1,14 +1,18 @@
+# pipeline/Dockerfile
 FROM python:3.9-slim
 
-# Set working directory
+# Install git
+RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
-# Install dependencies
+# Copy + install Python deps
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the pipeline code and analysis scripts
+# Copy pipeline code
 COPY pipeline.py .
+COPY ml ./ml
 
-# Command to run the pipeline script
-ENTRYPOINT ["python", "pipeline.py"]
+EXPOSE 9001
+CMD ["python", "pipeline.py"]
