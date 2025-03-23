@@ -1,16 +1,15 @@
 # be/Dockerfile
 FROM node:22.13.1
 
-WORKDIR /be
+WORKDIR /app
 
-# Copy package files first
+# copy your Node packages
 COPY package*.json ./
 RUN npm install
 
-# Copy source code & build
+# copy the rest of backend source
 COPY . .
 RUN npx tsc
 
-# Expose 5000 internally
 EXPOSE 5001
 CMD ["node", "dist/server.js"]
