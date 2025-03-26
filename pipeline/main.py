@@ -6,7 +6,7 @@ import psycopg2  # pip install psycopg2 (or psycopg2-binary) if using Postgres
 from git import Repo  # from GitPython
 from pipeline.ml.code_llm import summarize_code_snippet
 from dagster_docker import docker_executor
-
+from .ml.code_llm import summarize_code_snippet
 @op(
     config_schema={
         "repo_url": String,      # e.g. "https://github.com/your-username/your-repo.git"
