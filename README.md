@@ -1,6 +1,6 @@
 # Prometheus-Echo
 
-Prometheus-Echo is a [brief description of what the project does].
+Prometheus-Echo is a software that helps organizations and individuals create documentation that is fun and easy to read.
 
 ## Installation
 
