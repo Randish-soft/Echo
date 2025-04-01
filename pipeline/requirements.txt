@@ -6,5 +6,4 @@ torch
 requests
 gitpython
 psycopg2-binary
-pendulum==2.1.2
 

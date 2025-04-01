@@ -5,6 +5,7 @@ import "./CSS/DocPage.css";
 import { FiFileText, FiFile, FiFolder } from 'react-icons/fi';
 import { FaJsSquare, FaCss3Alt, FaHtml5 } from 'react-icons/fa';
 import { IoIosImage } from 'react-icons/io';
+import { marked } from 'marked';
 
 interface TreeItem {
     path: string;
@@ -46,6 +47,7 @@ type FolderNode = {
     children: (FolderNode | FileNode)[];
 };
 
+
 const DocumentPage: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -59,7 +61,30 @@ const DocumentPage: React.FC = () => {
     const [treeItems, setTreeItems] = useState<TreeItem[]>([]);
     const [nestedTree, setNestedTree] = useState<(FolderNode | FileNode)[]>([]);
     const typingTimerRef = useRef<NodeJS.Timeout | null>(null);
-
+    
+    const handlePreview = () => {
+        const htmlContent = marked(docContent); // Convert Markdown to HTML
+        const previewWindow = window.open("", "_blank"); // Open new tab
+        
+        if (previewWindow) {
+            previewWindow.document.write(`
+                <html>
+                <head>
+                    <title>Markdown Preview</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: auto; }
+                        h1, h2, h3 { color: #333; }
+                        pre { background: #f4f4f4; padding: 10px; border-radius: 5px; }
+                    </style>
+                </head>
+                <body>${htmlContent}</body>
+                </html>
+            `);
+            previewWindow.document.close();
+        } else {
+            alert("Failed to open preview window. Please allow pop-ups.");
+        }
+    };
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         const r = params.get('repo') || '';
@@ -238,24 +263,24 @@ const DocumentPage: React.FC = () => {
             </div>
 
             <div className="doc-right-pane">
-                <h2>Documentation Editor</h2>
-                <textarea
-                    className="doc-textarea"
-                    placeholder="Type your doc here..."
-                    value={docContent}
-                    onChange={handleDocChange}
-                />
-                <div className="editor-footer">
-                    <button className="btn" onClick={goBack}>Back</button>
-                    {isAutosaved ? (
-                        <span className="autosave-status">Autosaved</span>
-                    ) : (
-                        <span className="autosave-status typing">Typing...</span>
-                    )}
-                    <button className="btn commit-btn" onClick={handleCommitToGithub}>
-                        Commit to GitHub
-                    </button>
-                </div>
+                    <h2>Documentation Editor</h2>
+                    <textarea
+                        className="doc-textarea"
+                        placeholder="Type your doc here..."
+                        value={docContent}
+                        onChange={handleDocChange}
+                    />
+                    <div className="editor-footer">
+        <button className="btn" onClick={goBack}>Back</button>
+        {isAutosaved ? (
+            <span className="autosave-status">Autosaved</span>
+        ) : (
+            <span className="autosave-status typing">Typing...</span>
+        )}
+        <button className="btn preview-btn" onClick={handlePreview}>Preview</button>
+        <button className="btn commit-btn" onClick={handleCommitToGithub}>Commit to GitHub</button>
+    </div>
+
             </div>
         </div>
     );
