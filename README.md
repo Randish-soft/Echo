@@ -1,6 +1,6 @@
 # Prometheus-Echo
 
-Prometheus-Echo is a [brief description of what the project does].
+Prometheus-Echo is a software as a service that is aimed towards simplifying the process of writing documentation by using code grouping and A.I, no this software won't replace Technical Writers, it will just make their lives much easier.
 
 ## Installation
 
