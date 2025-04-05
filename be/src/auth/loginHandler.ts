@@ -34,7 +34,7 @@ export const loginHandler: RequestHandler = async (req, res) => {
         );
 
         // 4) (Optional) Kick off the pipeline analysis
-        //    This assumes your pipeline.py is in /app (or somewhere accessible)
+        //    This assumes your run_pipeline.py is in /app (or somewhere accessible)
         //    and that dagster is installed inside this container.
 
 

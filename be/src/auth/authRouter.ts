@@ -3,6 +3,7 @@ import axios from 'axios';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import pool from '../db';
+import { exec } from 'child_process';
 
 const router = express.Router();
 
@@ -75,6 +76,29 @@ router.get('/github/repos', asyncHandler(async (req: Request, res: Response) => 
         headers: { Authorization: `Bearer ${token}` },
     });
     return res.json(response.data);
+}));
+
+// Endpoint to trigger the pipeline
+router.post('/trigger-pipeline', asyncHandler(async (req: Request, res: Response) => {
+    const { repoUrl, token, user_id } = req.body;
+    if (!repoUrl || !token || !user_id) {
+        return res.status(400).json({ message: 'Missing repoUrl, token, or user_id' });
+    }
+
+    // Set the environment variables for the pipeline
+    process.env.GITHUB_REPO_URL = repoUrl;
+    process.env.GITHUB_ACCESS_TOKEN = token;
+    process.env.USER_ID = user_id;
+
+    // Trigger the pipeline
+    exec('dagster pipeline execute -f /app/pipeline.py -j run_code_analysis_pipeline', (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error triggering pipeline: ${error.message}`);
+            return res.status(500).json({ message: 'Error triggering pipeline' });
+        }
+        console.log(`Pipeline output: ${stdout}`);
+        res.status(200).json({ message: 'Pipeline triggered successfully' });
+    });
 }));
 
 /* =======================
