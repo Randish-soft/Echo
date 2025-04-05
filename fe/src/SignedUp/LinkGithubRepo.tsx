@@ -56,10 +56,41 @@ const LinkGithubRepo: React.FC = () => {
     /**
      * When a user selects a repo, go to /document-page?repo=...&token=...
      */
-    const handleRepoSelect = (repoFullName: string) => {
+    const handleRepoSelect = async (repoFullName: string) => {
         setSelectedRepo(repoFullName);
         alert(`You have linked to the repository: ${repoFullName}`);
+
+        // Trigger the pipeline with the selected repo URL
+        await triggerPipeline(repoFullName, token);
+
         navigate(`/document-page?repo=${encodeURIComponent(repoFullName)}&token=${token || ''}`);
+    };
+
+    /**
+     * Trigger the pipeline with the selected repo URL.
+     */
+    const triggerPipeline = async (repoFullName: string, token: string | null) => {
+        if (!token) return;
+
+        try {
+            const response = await fetch('http://localhost:5001/trigger-pipeline', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ repoUrl: `https://github.com/${repoFullName}.git`, token, user_id: "user_42" }),
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Failed to trigger pipeline: ${errorText}`);
+            }
+
+            const data = await response.json();
+            console.log('Pipeline triggered successfully:', data);
+        } catch (error) {
+            console.error('Error triggering pipeline:', error);
+        }
     };
 
     /**

@@ -1,31 +1,25 @@
-# run_pipeline.py
 from dagster import job, op, In, Out, String, Field
 import subprocess
 import os
-import psycopg2  # pip install psycopg2 (or psycopg2-binary) if using Postgres
-from git import Repo  # from GitPython
+import psycopg2
+from git import Repo
 from pipeline.ml.code_llm import summarize_code_snippet
 from dagster_docker import docker_executor
-from .ml.code_llm import summarize_code_snippet
-@op(
-    config_schema={
-        "repo_url": String,      # e.g. "https://github.com/your-username/your-repo.git"
-        "analysis_script": String,  # path to a local .py script if you want
-        "database_url": String,  # e.g. "postgresql://user:password@host:port/db_name"
-        "user_id": String,       # ID or username of the signed-in user
-    }
-)
+
+class AnalyzeConfig(Config):
+    repo_url: str
+    analysis_script: str
+    database_url: str
+    user_id: str
+
+@op(config_schema=AnalyzeConfig.to_dict())
 def analyze_and_store(context):
-    """
-    1. Clones the given GitHub repo.
-    2. Optionally runs analysis_script.
-    3. Summarizes each .py file via the code LLM.
-    4. Inserts results into the DB under the given user_id.
-    """
-    repo_url = context.op_config["repo_url"]
-    analysis_script = context.op_config["analysis_script"]
-    database_url = context.op_config["database_url"]
-    user_id = context.op_config["user_id"]
+    config = context.op_config
+
+    repo_url = config["repo_url"]
+    analysis_script = config["analysis_script"]
+    database_url = config["database_url"]
+    user_id = config["user_id"]
 
     # 1) Clone the repo to /tmp/repo
     clone_path = "/tmp/repo"
@@ -67,13 +61,6 @@ def analyze_and_store(context):
     try:
         with conn:
             with conn.cursor() as cur:
-                # Example table definition:
-                # CREATE TABLE code_analysis (
-                #    id SERIAL PRIMARY KEY,
-                #    user_id VARCHAR NOT NULL,
-                #    file_path TEXT,
-                #    summary TEXT
-                # );
                 for path, summary in summaries.items():
                     cur.execute(
                         "INSERT INTO code_analysis (user_id, file_path, summary) VALUES (%s, %s, %s)",
@@ -82,17 +69,18 @@ def analyze_and_store(context):
     finally:
         conn.close()
 
+    context.log.info(f"Inserted {len(summaries)} records into the database.")
     return {"status": "success", "count": len(summaries)}
-
 
 @job(
     executor_def=docker_executor.configured(
         {
             "image": "python:3.9-slim",
             "env_vars": {
-                # If you want to pass env vars or secrets into the Docker executor,
-                # do that here. For example:
-                # "DATABASE_URL": "postgresql://..."
+                "DATABASE_URL": os.getenv("DATABASE_URL"),
+                "GITHUB_REPO_URL": os.getenv("GITHUB_REPO_URL"),
+                "GITHUB_ACCESS_TOKEN": os.getenv("GITHUB_ACCESS_TOKEN"),
+                "USER_ID": os.getenv("USER_ID"),
             },
         }
     )
