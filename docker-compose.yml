@@ -1,5 +1,6 @@
+version: '3.8'
+
 services:
-  # === DATABASE (Postgres) ===
   db:
     image: postgres:15
     container_name: echo_db
@@ -9,7 +10,6 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: echodb
     volumes:
-      # This runs init.sql exactly once when the volume is empty
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
@@ -19,7 +19,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # === BACKEND (Node + TypeScript) ===
   backend:
     build:
       context: ./be
@@ -28,25 +27,20 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      pipeline:
-        condition: service_started
     ports:
       - "5001:5001"
     environment:
-      # Database
       DB_HOST: db
       DB_USER: postgres
       DB_PASS: postgres
       DB_NAME: echodb
       DB_PORT: 5432
-      # JWT secret
-      JWT_SECRET: "some-secret-for-jwt"
-      # Pipeline URL
-      PIPELINE_URL: "http://pipeline:9001"
-    # If you have migrations to run, you can do so here
-    # command: ["npm", "run", "migrate"]
+      JWT_SECRET: "supersecretkey123"
+      GITHUB_CLIENT_ID: "Ov23liyHTxCSxmH4xKLg"
+      GITHUB_CLIENT_SECRET: "b6d646bfdd047d15bd89521aaaccc90a06b03a42"
+      FRONTEND_URL: "http://localhost:5173/link-github"
+      PORT: 5001
 
-  # === FRONTEND (React + Vite) ===
   frontend:
     build:
       context: ./fe
@@ -57,36 +51,10 @@ services:
     ports:
       - "5173:5173"
     environment:
-      # So that the front-end knows where to reach the backend
       VITE_API_BASE_URL: "http://localhost:5001"
-    # Optional volume so you can hot-reload changes in dev
     volumes:
       - ./fe:/app
       - /app/node_modules
-
-  # === PIPELINE (Python) ===
-  pipeline:
-    build:
-      context: ./pipeline
-      dockerfile: Dockerfile
-    container_name: echo_pipeline
-    depends_on:
-      - db
-    environment:
-      DB_HOST: db
-      DB_USER: postgres
-      DB_PASS: postgres
-      DB_NAME: echodb
-      DB_PORT: 5432
-    # We expose 5000 inside the container so the backend can call it
-    ports:
-      - "9001:5000"
-    # Map volumes if you want the pipeline to see your local repo files
-    volumes:
-      - ./be:/analyze/be
-      - ./fe:/analyze/fe
-      - ./db:/analyze/db
-      # If your pipeline clones from GitHub, you might not need this
 
 networks:
   default:

@@ -1,20 +1,15 @@
-// be/src/auth/authRouter.ts
 import express, { Request, Response, NextFunction } from 'express';
 import axios from 'axios';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { Pool } from 'pg';
+import pool from '../db';
 
 const router = express.Router();
-const pool = new Pool();
 
 const CLIENT_ID = process.env.GITHUB_CLIENT_ID || '';
 const CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET || '';
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret';
-
-// Where do we send the user after we have the GitHub token?
-// e.g., your React app's route:
-const FRONTEND_REDIRECT_URI = process.env.FRONTEND_URL || 'http://localhost:3000/link-github';
+const FRONTEND_REDIRECT_URI = process.env.FRONTEND_URL || 'http://localhost:5173/link-github';
 
 /** Helper wrapper for async/await error handling */
 const asyncHandler =

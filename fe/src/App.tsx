@@ -1,4 +1,3 @@
-// fe/src/App.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiMenu } from 'react-icons/fi';
@@ -221,11 +220,20 @@ function App() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: loginUsername, password: loginPassword }),
             });
+
+            // Log the response status and text
+            console.log('Login response status:', response.status);
+            const responseText = await response.text();
+            console.log('Login response text:', responseText);
+
             let data: ApiResponse = {};
             try {
-                data = await response.json();
+                data = JSON.parse(responseText);
+                console.log('Login response data:', data); // Add this line for debugging
             } catch (jsonErr) {
                 console.error('Error reading JSON:', jsonErr);
+                alert('Server error. Please try again.');
+                return;
             }
 
             if (response.ok) {
@@ -238,7 +246,6 @@ function App() {
                 setLoggedInUser(username);
                 alert('Logged in successfully!');
                 handleCloseLogin();
-                // After login, we could also route them to /link-github
                 navigate('/link-github');
             } else {
                 const msg = data.message || 'Unknown error';
