@@ -1,18 +1,8 @@
--- db/init.sql
+-- 1) Check if "echodb" exists; if not, create it.
+SELECT 1 FROM pg_database WHERE datname = 'echodb';
 
--- 1) Check if "mydb" exists; if not, create it.
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT FROM pg_database WHERE datname = 'mydb'
-    ) THEN
-        CREATE DATABASE "mydb";
-    END IF;
-END
-$$;
-
--- 2) Switch to "mydb" to create tables inside it
-\connect mydb;
+-- 2) Create 'echodb' if it doesn't exist
+\c echodb
 
 -- 3) Create 'users' table if it doesn't exist
 CREATE TABLE IF NOT EXISTS users (
