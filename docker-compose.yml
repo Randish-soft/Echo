@@ -54,19 +54,6 @@ services:
       - ./fe:/app
       - /app/node_modules
 
-  pipeline:
-    build:
-      context: ./pipeline
-      dockerfile: Dockerfile
-    container_name: echo_pipeline
-    depends_on:
-      - backend
-    environment:
-      DAGSTER_HOME: "/app/dagster_home"
-      DATABASE_URL: "postgresql://postgres:postgres@db:5432/echodb"
-    volumes:
-      - ./pipeline:/app
-      - ./pipeline/dagster_home:/app/dagster_home
 
 networks:
   default:

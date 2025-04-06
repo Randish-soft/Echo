@@ -1,7 +1,0 @@
-ops:
-  analyze_and_store:
-    config:
-      analysis_script: "summarize"
-      database_url: "postgresql://localhost:5432/mydb"
-      repo_url: "https://github.com/example/myrepo"
-      user_id: "user_42"

@@ -2,6 +2,7 @@ import { RequestHandler } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { Pool } from "pg";
+import { exec } from "child_process"; // Import the exec function to run the Python script
 
 const pool = new Pool();
 
@@ -33,12 +34,7 @@ export const loginHandler: RequestHandler = async (req, res) => {
             { expiresIn: "1h" }
         );
 
-        // 4) (Optional) Kick off the pipeline analysis
-        //    This assumes your run_pipeline.py is in /app (or somewhere accessible)
-        //    and that dagster is installed inside this container.
-
-
-        // 5) Send success response
+        // 5) Send success response with token
         res.status(200).json({ token, username: user.email });
     } catch (error) {
         console.error("Login error:", error);
