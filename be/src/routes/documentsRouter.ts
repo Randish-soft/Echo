@@ -1,7 +1,7 @@
-// be/src/routes/documentsRouter.ts
 import { Router } from 'express';
 import { Pool } from 'pg';
 import jwt from 'jsonwebtoken';
+import { analyzeRepository } from '../services/documentService';
 
 const pool = new Pool();
 const documentsRouter = Router();
@@ -14,10 +14,12 @@ documentsRouter.use((req, res, next) => {
         return res.status(401).json({ message: 'No token provided' });
     }
     try {
+        console.log('Verifying token:', token);
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback') as any;
         (req as any).user = decoded;
         next();
     } catch (e) {
+        console.error('Token verification failed:', e);
         return res.status(401).json({ message: 'Invalid token' });
     }
 });
@@ -83,6 +85,20 @@ documentsRouter.delete('/:id', async (req, res) => {
         res.status(200).json({ message: 'Document deleted' });
     } catch (error) {
         res.status(500).json({ message: 'Error deleting document' });
+    }
+});
+
+// POST /documents/analyze-repository
+documentsRouter.post('/analyze-repository', async (req, res) => {
+    const { repoFullName, token, selectedBranch } = req.body;
+    try {
+        console.log('Analyzing repository...');
+        const userManual = await analyzeRepository(repoFullName, token, selectedBranch);
+        console.log('User manual generated:', userManual);
+        res.json({ userManual });
+    } catch (error) {
+        console.error('Error analyzing repository:', error);
+        res.status(500).json({ message: 'Error analyzing repository' });
     }
 });
 

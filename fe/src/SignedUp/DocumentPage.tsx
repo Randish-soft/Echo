@@ -47,7 +47,6 @@ type FolderNode = {
     children: (FolderNode | FileNode)[];
 };
 
-
 const DocumentPage: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -61,11 +60,11 @@ const DocumentPage: React.FC = () => {
     const [treeItems, setTreeItems] = useState<TreeItem[]>([]);
     const [nestedTree, setNestedTree] = useState<(FolderNode | FileNode)[]>([]);
     const typingTimerRef = useRef<NodeJS.Timeout | null>(null);
-    
+
     const handlePreview = () => {
         const htmlContent = marked(docContent); // Convert Markdown to HTML
         const previewWindow = window.open("", "_blank"); // Open new tab
-        
+
         if (previewWindow) {
             previewWindow.document.write(`
                 <html>
@@ -85,6 +84,7 @@ const DocumentPage: React.FC = () => {
             alert("Failed to open preview window. Please allow pop-ups.");
         }
     };
+
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         const r = params.get('repo') || '';
@@ -122,7 +122,7 @@ const DocumentPage: React.FC = () => {
                 fetchFileTree(repo, accessToken, mainBranch.commit.sha);
             }
         } catch (err) {
-            console.error(err);
+            console.error('Error fetching branches:', err);
         }
     }
 
@@ -234,13 +234,41 @@ const DocumentPage: React.FC = () => {
             }, 2000);
 
         } catch (err) {
-            console.error(err);
+            console.error('Error committing to GitHub:', err);
             alert(`Error committing to GitHub: ${err}`);
         }
     }, [docContent, repoFullName, selectedBranch, token, getFileSha]);
 
     const goBack = () => {
         navigate(-1);
+    };
+
+    const handleGenerateUserManual = async () => {
+        if (!repoFullName || !token || !selectedBranch) return;
+
+        try {
+            console.log('Generating user manual...');
+            console.log('Token:', token);
+            const response = await fetch('http://localhost:5001/documents/analyze-repository', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({ repoFullName, token, selectedBranch }),
+            });
+
+            if (!response.ok) {
+                console.error('Failed to generate user manual:', response.statusText);
+                throw new Error('Failed to generate user manual');
+            }
+
+            const data = await response.json();
+            console.log('User manual generated:', data);
+            setDocContent(data.userManual);
+        } catch (err) {
+            console.error('Error generating user manual:', err);
+        }
     };
 
     return (
@@ -263,24 +291,24 @@ const DocumentPage: React.FC = () => {
             </div>
 
             <div className="doc-right-pane">
-                    <h2>Documentation Editor</h2>
-                    <textarea
-                        className="doc-textarea"
-                        placeholder="Type your doc here..."
-                        value={docContent}
-                        onChange={handleDocChange}
-                    />
-                    <div className="editor-footer">
-        <button className="btn" onClick={goBack}>Back</button>
-        {isAutosaved ? (
-            <span className="autosave-status">Autosaved</span>
-        ) : (
-            <span className="autosave-status typing">Typing...</span>
-        )}
-        <button className="btn preview-btn" onClick={handlePreview}>Preview</button>
-        <button className="btn commit-btn" onClick={handleCommitToGithub}>Commit to GitHub</button>
-    </div>
-
+                <h2>Documentation Editor</h2>
+                <textarea
+                    className="doc-textarea"
+                    placeholder="Type your doc here..."
+                    value={docContent}
+                    onChange={handleDocChange}
+                />
+                <div className="editor-footer">
+                    <button className="btn" onClick={goBack}>Back</button>
+                    {isAutosaved ? (
+                        <span className="autosave-status">Autosaved</span>
+                    ) : (
+                        <span className="autosave-status typing">Typing...</span>
+                    )}
+                    <button className="btn preview-btn" onClick={handlePreview}>Preview</button>
+                    <button className="btn commit-btn" onClick={handleCommitToGithub}>Commit to GitHub</button>
+                    <button className="btn generate-btn" onClick={handleGenerateUserManual}>Generate User Manual</button>
+                </div>
             </div>
         </div>
     );

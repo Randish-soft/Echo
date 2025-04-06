@@ -91,7 +91,7 @@ router.post('/trigger-pipeline', asyncHandler(async (req: Request, res: Response
     process.env.USER_ID = user_id;
 
     // Trigger the pipeline
-    exec('dagster pipeline execute -f /app/pipeline.py -j run_code_analysis_pipeline', (error, stdout, stderr) => {
+    exec('dagster pipeline execute -f /app/pipeline/run_pipeline.py -j run_code_analysis_pipeline', (error, stdout, stderr) => {
         if (error) {
             console.error(`Error triggering pipeline: ${error.message}`);
             return res.status(500).json({ message: 'Error triggering pipeline' });
