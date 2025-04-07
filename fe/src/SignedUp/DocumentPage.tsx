@@ -1,13 +1,17 @@
 // fe/src/SignedUp/DocumentPage.tsx
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import "../global-css/navbar.css";
-import "./CSS/DocPage.css";
+
+// Global + doc page CSS
+import "../global-css/navbar.css"; 
+import "./CSS/DocPage.css";        
+
 import { FiFileText, FiFile, FiFolder } from 'react-icons/fi';
 import { FaJsSquare, FaCss3Alt, FaHtml5 } from 'react-icons/fa';
 import { IoIosImage } from 'react-icons/io';
 import { marked } from 'marked';
-import ProgressModal from './ProgressModal';  // <--- Import the progress modal
+import ProgressModal from './ProgressModal';
 
 interface TreeItem {
   path: string;
@@ -53,47 +57,69 @@ const DocumentPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Access token / repo
+  // For user email displayed in navbar
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  // For Git/GitHub
   const [token, setToken] = useState('');
   const [repoFullName, setRepoFullName] = useState('');
-
-  // Documentation text we’re editing
-  const [docContent, setDocContent] = useState<string>('');
-  const [isAutosaved, setIsAutosaved] = useState(false);
-
-  // For Git branches
   const [branches, setBranches] = useState<Branch[]>([]);
   const [selectedBranch, setSelectedBranch] = useState('');
   const [treeItems, setTreeItems] = useState<TreeItem[]>([]);
   const [nestedTree, setNestedTree] = useState<(FolderNode | FileNode)[]>([]);
+
+  // For doc editing
+  const [docContent, setDocContent] = useState<string>('');
+  const [isAutosaved, setIsAutosaved] = useState(false);
   const typingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // For showing a loading bar while summarizing
+  // For progress modal
   const [isGenerating, setIsGenerating] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
 
-  // On mount, parse the URL params ?repo=?token=
+  // We'll store dark mode preference in state
+  const [darkMode, setDarkMode] = useState(false);
+
   useEffect(() => {
+    // read userEmail from localStorage if you store it there
+    const storedEmail = localStorage.getItem('userEmail');
+    setUserEmail(storedEmail);
+
+    // parse ?repo=?token= from URL
     const params = new URLSearchParams(location.search);
-    const r = params.get('repo') || '';
-    const t = params.get('token') || '';
+    const repo = params.get('repo') || '';
+    const tk = params.get('token') || '';
 
-    setRepoFullName(r);
-    setToken(t);
+    setRepoFullName(repo);
+    setToken(tk);
 
-    if (r && t) {
-      fetchBranches(r, t);
+    if (repo && tk) {
+      fetchBranches(repo, tk);
     }
 
-    // Restore doc content from localStorage
-    const savedDocContent = localStorage.getItem('docContent');
-    if (savedDocContent) {
-      setDocContent(savedDocContent);
+    // restore doc content if any
+    const savedDoc = localStorage.getItem('docContent');
+    if (savedDoc) {
+      setDocContent(savedDoc);
     }
   }, [location.search]);
 
+  // Toggle dark mode on the entire HTML document
+  const toggleDarkMode = () => {
+    setDarkMode(prev => {
+      const newVal = !prev;
+      // Apply or remove 'dark-mode' class on <html>:
+      if (newVal) {
+        document.documentElement.classList.add('dark-mode');
+      } else {
+        document.documentElement.classList.remove('dark-mode');
+      }
+      return newVal;
+    });
+  };
+
   /**
-   * Fetch the branches from GitHub
+   * Load branches from GitHub
    */
   async function fetchBranches(repo: string, accessToken: string) {
     try {
@@ -107,9 +133,9 @@ const DocumentPage: React.FC = () => {
       setBranches(data);
 
       if (data.length > 0) {
-        const mainBranch = data.find(b => b.name === 'main') || data[0];
-        setSelectedBranch(mainBranch.name);
-        fetchFileTree(repo, accessToken, mainBranch.commit.sha);
+        const main = data.find(b => b.name === 'main') || data[0];
+        setSelectedBranch(main.name);
+        fetchFileTree(repo, accessToken, main.commit.sha);
       }
     } catch (err) {
       console.error('Error fetching branches:', err);
@@ -117,7 +143,7 @@ const DocumentPage: React.FC = () => {
   }
 
   /**
-   * Fetch the entire file tree for the selected branch
+   * Load the file tree
    */
   async function fetchFileTree(repo: string, accessToken: string, commitSha: string) {
     try {
@@ -134,7 +160,7 @@ const DocumentPage: React.FC = () => {
     }
   }
 
-  // Build nested tree structure
+  // build nestedTree once we have treeItems
   useEffect(() => {
     if (treeItems.length === 0) {
       setNestedTree([]);
@@ -144,13 +170,9 @@ const DocumentPage: React.FC = () => {
     setNestedTree(root);
   }, [treeItems]);
 
-  /**
-   * Branch dropdown change
-   */
   const handleBranchChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newBranch = e.target.value;
     setSelectedBranch(newBranch);
-
     const br = branches.find(b => b.name === newBranch);
     if (br) {
       fetchFileTree(repoFullName, token, br.commit.sha);
@@ -158,8 +180,7 @@ const DocumentPage: React.FC = () => {
   };
 
   /**
-   * Called when user types in the doc editor
-   * We autosave after 1s
+   * Auto-save doc content after 1s
    */
   const handleDocChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
@@ -172,16 +193,14 @@ const DocumentPage: React.FC = () => {
     typingTimerRef.current = setTimeout(() => {
       localStorage.setItem('docContent', newValue);
       setIsAutosaved(true);
-      console.log('Autosaved:', newValue);
     }, 1000);
   };
 
-  /**
-   * Example: get the file's SHA from GitHub before committing
-   */
+  // getFileSha, handleCommitToGithub, goBack, handleGenerateUserManual, handleCloseModal
+  // remain the same as your current code:
+
   const getFileSha = useCallback(async (path: string) => {
     if (!repoFullName || !token || !selectedBranch) return null;
-
     const [owner, repoName] = repoFullName.split('/');
     const url = `https://api.github.com/repos/${owner}/${repoName}/contents/${path}?ref=${selectedBranch}`;
     const resp = await fetch(url, {
@@ -191,21 +210,16 @@ const DocumentPage: React.FC = () => {
       console.error('Failed to fetch file SHA');
       return null;
     }
-
     const data = await resp.json();
-    return data.sha; // might be undefined if file doesn't exist
+    return data.sha;
   }, [repoFullName, token, selectedBranch]);
 
-  /**
-   * Commit the doc content to GitHub as 'DOC_README.md'
-   */
   const handleCommitToGithub = useCallback(async () => {
     if (!repoFullName || !token || !selectedBranch) return;
 
-    const path = 'README.md'; // or README.md
+    const path = 'README.md';
     let sha = await getFileSha(path);
 
-    // If sha is null, there's no existing file. That's fine, we do a create.
     const base64Content = btoa(docContent || '');
     const message = `Update doc from DocumentPage on branch ${selectedBranch}`;
 
@@ -223,7 +237,7 @@ const DocumentPage: React.FC = () => {
         body: JSON.stringify({
           message,
           content: base64Content,
-          sha, // can be null if file doesn't exist yet
+          sha: sha || undefined,
         }),
       });
 
@@ -242,25 +256,16 @@ const DocumentPage: React.FC = () => {
     }
   }, [docContent, repoFullName, selectedBranch, token, getFileSha]);
 
-  /**
-   * Go back
-   */
   const goBack = () => {
     navigate(-1);
   };
 
-  /**
-   * Generate user manual by calling /documents/analyze-repository
-   * Show the progress modal so the user sees a loading bar
-   */
   const handleGenerateUserManual = async () => {
     if (!repoFullName || !token || !selectedBranch) return;
     setIsGenerating(true);
     setIsComplete(false);
 
     try {
-      console.log('Generating user manual...');
-      console.log('Token:', token);
       const response = await fetch('http://localhost:5001/documents/analyze-repository', {
         method: 'POST',
         headers: {
@@ -278,23 +283,17 @@ const DocumentPage: React.FC = () => {
       const data = await response.json();
       console.log('User manual generated:', data);
 
-      // The server might return an object like { userManual: "<string>" }
-      // or double-wrapped { userManual: { userManual: "<string>" } }
       let finalText = '';
-
       if (typeof data.userManual === 'string') {
-        // single-layer
         finalText = data.userManual;
       } else if (data.userManual && typeof data.userManual.userManual === 'string') {
-        // double-layer
         finalText = data.userManual.userManual;
       } else {
-        // fallback: no recognized string
         finalText = JSON.stringify(data, null, 2);
       }
 
       setDocContent(finalText);
-      setIsComplete(true); // cause the progress bar to jump to 100%
+      setIsComplete(true);
     } catch (err) {
       console.error('Error generating user manual:', err);
       alert('Error generating user manual. Check console for details.');
@@ -302,68 +301,85 @@ const DocumentPage: React.FC = () => {
     }
   };
 
-  /**
-   * Called when user clicks 'Close' on the progress modal
-   */
   const handleCloseModal = () => {
     setIsGenerating(false);
   };
 
   return (
-    <div className="doc-container">
-      {/* The loading bar modal, center of screen */}
-      <ProgressModal
-        isVisible={isGenerating}
-        isComplete={isComplete}
-        onClose={handleCloseModal}
-      />
-
-      <div className="doc-left-pane">
-        <h3>Repository Tree</h3>
-        <div className="branch-selector">
-          <label>
-            Branch:
-            <select value={selectedBranch} onChange={handleBranchChange}>
-              {branches.map(b => (
-                <option key={b.name} value={b.name}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-        <FileTree nodes={nestedTree} />
-      </div>
-
-      <div className="doc-right-pane">
-        <h2>Documentation Editor</h2>
-        <textarea
-          className="doc-textarea"
-          placeholder="Type your doc here..."
-          value={docContent}
-          onChange={handleDocChange}
-        />
-        <div className="editor-footer">
-          <button className="btn" onClick={goBack}>Back</button>
-          {isAutosaved ? (
-            <span className="autosave-status">Autosaved</span>
+    <>
+      {/* NAVBAR */}
+      <nav className="navbar">
+        <h1 className="brand">echo</h1>
+        <div className="nav-right">
+          {userEmail ? (
+            <p>Signed in as: {userEmail}</p>
           ) : (
-            <span className="autosave-status typing">Typing...</span>
+            <p>Not signed in</p>
           )}
-          <button className="btn commit-btn" onClick={handleCommitToGithub}>
-            Commit to GitHub
-          </button>
-          <button className="btn generate-btn" onClick={handleGenerateUserManual}>
-            Generate User Manual
+          {/* Dark Mode Toggle Button */}
+          <button onClick={toggleDarkMode} style={{ marginLeft: '1rem', cursor: 'pointer' }}>
+            {darkMode ? 'Light Mode' : 'Dark Mode'}
           </button>
         </div>
+      </nav>
+
+      {/* doc-container remains, but we do NOT attach .dark-mode here,
+          because we are applying .dark-mode to <html> in toggleDarkMode. */}
+      <div className="doc-container">
+
+        <ProgressModal
+          isVisible={isGenerating}
+          isComplete={isComplete}
+          onClose={handleCloseModal}
+        />
+
+        <div className="doc-left-pane">
+          <h3>Repository Tree</h3>
+          <div className="branch-selector">
+            <label>
+              Branch:
+              <select value={selectedBranch} onChange={handleBranchChange}>
+                {branches.map(b => (
+                  <option key={b.name} value={b.name}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <FileTree nodes={nestedTree} />
+        </div>
+
+        <div className="doc-right-pane">
+          <h2>Documentation Editor</h2>
+          <textarea
+            className="doc-textarea"
+            placeholder="Type your doc here..."
+            value={docContent}
+            onChange={handleDocChange}
+          />
+          <div className="editor-footer">
+            <button className="btn" onClick={goBack}>Back</button>
+            {isAutosaved ? (
+              <span className="autosave-status">Autosaved</span>
+            ) : (
+              <span className="autosave-status typing">Typing...</span>
+            )}
+            <button className="btn commit-btn" onClick={handleCommitToGithub}>
+              Commit to GitHub
+            </button>
+            <button className="btn generate-btn" onClick={handleGenerateUserManual}>
+              Generate User Manual
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
-/**
- * Build a nested tree from the raw Git items
+/** 
+ * Build nested tree 
  */
 function buildNestedTree(treeItems: TreeItem[]): (FolderNode | FileNode)[] {
   const rootNodes: (FolderNode | FileNode)[] = [];
@@ -378,14 +394,27 @@ function insertPath(currentLevel: (FolderNode | FileNode)[], parts: string[], it
   const [first, ...rest] = parts;
   if (rest.length === 0) {
     if (item.type === 'blob') {
-      currentLevel.push({ name: first, type: 'file', path: item.path, sha: item.sha });
+      currentLevel.push({ 
+        name: first, 
+        type: 'file', 
+        path: item.path, 
+        sha: item.sha 
+      });
     } else {
-      currentLevel.push({ name: first, type: 'folder', path: item.path, sha: item.sha, children: [] });
+      currentLevel.push({ 
+        name: first, 
+        type: 'folder', 
+        path: item.path, 
+        sha: item.sha, 
+        children: [] 
+      });
     }
     return;
   }
 
-  let folderNode = currentLevel.find(n => n.type === 'folder' && n.name === first) as FolderNode | undefined;
+  let folderNode = currentLevel.find(
+    n => n.type === 'folder' && n.name === first
+  ) as FolderNode | undefined;
   if (!folderNode) {
     folderNode = { name: first, type: 'folder', path: '', sha: '', children: [] };
     currentLevel.push(folderNode);
@@ -393,11 +422,10 @@ function insertPath(currentLevel: (FolderNode | FileNode)[], parts: string[], it
   insertPath(folderNode.children, rest, item);
 }
 
-/**
- * Render the file/folder tree
+/** 
+ * Display file tree
  */
 function FileTree({ nodes }: { nodes: (FolderNode | FileNode)[] }) {
-  // Folders first, then files, alphabetical
   nodes.sort((a, b) => {
     if (a.type === 'folder' && b.type === 'file') return -1;
     if (a.type === 'file' && b.type === 'folder') return 1;
@@ -418,20 +446,15 @@ function FileNodeUI({ node }: { node: FolderNode | FileNode }) {
 
   const getFileIcon = (fileName: string) => {
     const extension = fileName.split('.').pop()?.toLowerCase();
-    const icons: { [key: string]: React.ReactNode } = {
-      md: <FiFileText color="green" />,
-      js: <FaJsSquare color="yellow" />,
-      ts: <FaJsSquare color="blue" />,
-      json: <FiFile color="orange" />,
-      txt: <FiFileText color="gray" />,
-      css: <FaCss3Alt color="blue" />,
-      html: <FaHtml5 color="red" />,
-      png: <IoIosImage color="purple" />,
-      jpg: <IoIosImage color="purple" />,
-      svg: <IoIosImage color="purple" />,
-      default: <FiFile color="black" />,
-    };
-    return icons[extension as string] || icons.default;
+    if (extension === 'md') return <FiFileText />;
+    if (extension === 'js') return <FaJsSquare color="yellow" />;
+    if (extension === 'ts') return <FaJsSquare color="blue" />;
+    if (extension === 'json') return <FiFile color="orange" />;
+    if (extension === 'txt') return <FiFileText />;
+    if (extension === 'css') return <FaCss3Alt color="blue" />;
+    if (extension === 'html') return <FaHtml5 color="red" />;
+    if (/(png|jpg|jpeg|svg)/.test(extension || '')) return <IoIosImage color="purple" />;
+    return <FiFile />;
   };
 
   if (node.type === 'file') {
@@ -447,6 +470,8 @@ function FileNodeUI({ node }: { node: FolderNode | FileNode }) {
       <li className="folder-item">
         <div className="folder-label" onClick={toggleOpen}>
           <span className="folder-arrow">{isOpen ? '▼' : '▶'}</span>
+          {/* We'll keep folder "brown" in both light/dark? 
+              If you want it to invert, remove "color='brown'" or do more styling logic */}
           <span className="folder-icon"><FiFolder color="brown" /></span> {node.name}
         </div>
         {isOpen && (
