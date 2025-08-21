@@ -1,0 +1,24 @@
+services:
+  api:
+    build: ./api
+    container_name: repodocs-api
+    environment:
+      - PORT=8080
+      # - OPENAI_API_KEY=${OPENAI_API_KEY}
+      # - GITHUB_TOKEN=${GITHUB_TOKEN}
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  web:
+    build: ./web
+    container_name: repodocs-web
+    ports:
+      - "3000:80"
+    depends_on:
+      api:
+        condition: service_healthy
