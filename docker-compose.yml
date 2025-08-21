@@ -1,24 +1,44 @@
+version: "3.9"
+
 services:
-  api:
-    build: ./api
-    container_name: repodocs-api
+  api-dev:
+    image: node:20-alpine
+    container_name: repodocs-api-dev
+    working_dir: /app
+    command: sh -c "npm install && npm run dev"
     environment:
       - PORT=8080
-      # - OPENAI_API_KEY=${OPENAI_API_KEY}
-      # - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+    volumes:
+      - ./api:/app
+      - api_node_modules:/app/node_modules
     ports:
-      - "8080:8080"
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
+      - "8081:8080"   # host:container (dev API reachable at http://localhost:8081)
+    networks:
+      - repodocs
 
-  web:
-    build: ./web
-    container_name: repodocs-web
+  web-dev:
+    image: node:20-alpine
+    container_name: repodocs-web-dev
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    environment:
+      - VITE_API_BASE=/api
+    volumes:
+      - ./web:/app
+      - web_node_modules:/app/node_modules
     ports:
-      - "3000:80"
+      - "5173:5173"   # Vite dev server with HMR (http://localhost:5173)
     depends_on:
-      api:
-        condition: service_healthy
+      - api-dev
+    networks:
+      - repodocs
+
+volumes:
+  api_node_modules:
+  web_node_modules:
+
+networks:
+  repodocs:
+    driver: bridge

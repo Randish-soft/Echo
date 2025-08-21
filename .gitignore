@@ -1,0 +1,60 @@
+# Root .gitignore for RepoDocs
+
+# --- Node / package managers ---
+node_modules/
+.npm/
+.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Keep lockfiles committed for reproducible builds
+# (Do NOT ignore package-lock.json / pnpm-lock.yaml / yarn.lock)
+
+# --- Build artifacts / caches ---
+dist/
+build/
+coverage/
+reports/
+.tmp/
+.temp/
+.cache/
+.eslintcache
+.vite/
+
+# Per-package build dirs (redundant with dist/ above, kept for clarity)
+api/dist/
+web/dist/
+api/node_modules/
+web/node_modules/
+
+# --- Environment files ---
+.env
+*.env
+api/.env
+web/.env
+infra/.env
+
+# --- Logs / PIDs ---
+logs/
+*.log
+*.pid
+*.pid.lock
+
+# --- Docker / Compose overrides ---
+docker-compose.override.yml
+*.local.yml
+
+# --- OS / Editor junk ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~
+*.orig
+*.rej
+
+# --- Misc ---
+.node_repl_history

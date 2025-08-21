@@ -5,41 +5,38 @@ import RepoDocs from "./pages/RepoDocs";
 function App() {
   return (
     <Router>
-      <div className="min-h-screen flex flex-col bg-gray-50 text-gray-900">
+      <div className="min-h-screen flex flex-col">
         {/* Header */}
-        <header className="bg-white shadow-md">
-          <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-            <Link to="/" className="text-xl font-bold text-blue-600">
+        <header className="sticky top-0 z-20 bg-white/80 backdrop-blur border-b">
+          <div className="container-narrow py-3 flex items-center justify-between">
+            <Link to="/" className="text-lg font-semibold tracking-tight">
               RepoDocs
             </Link>
-            <nav className="space-x-4">
-              <Link to="/" className="hover:text-blue-600">
-                Dashboard
-              </Link>
-              <Link to="/docs" className="hover:text-blue-600">
-                Repo Docs
-              </Link>
+            <nav className="flex items-center gap-2">
+              <Link to="/" className="btn-ghost">Dashboard</Link>
+              <Link to="/docs" className="btn-primary">Repo Docs</Link>
             </nav>
           </div>
         </header>
 
-        {/* Main Content */}
-        <main className="flex-1 max-w-6xl mx-auto px-4 py-6 w-full">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/docs" element={<RepoDocs />} />
-          </Routes>
+        {/* Main */}
+        <main className="flex-1">
+          <div className="container-narrow py-8">
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/docs" element={<RepoDocs />} />
+            </Routes>
+          </div>
         </main>
 
         {/* Footer */}
-        <footer className="bg-white border-t">
-          <div className="max-w-6xl mx-auto px-4 py-3 text-sm text-gray-500 text-center">
-            © {new Date().getFullYear()} RepoDocs. All rights reserved.
+        <footer className="border-t bg-white">
+          <div className="container-narrow py-4 text-xs text-slate-500 text-center">
+            © {new Date().getFullYear()} RepoDocs
           </div>
         </footer>
       </div>
     </Router>
   );
 }
-
 export default App;
