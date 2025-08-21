@@ -12,18 +12,34 @@ function PromptTuner({ repo, onGenerate }: PromptTunerProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const callGenerate = async () => {
+    const body = {
+      mode: "markdown",
+      repoUrl: repo,
+      prompt
+    };
+    const res = await fetch("/api/docs/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(text || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    return (data.markdown as string) || "";
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
     try {
-      // Later hook this into your API
-      const fakeOutput = `# Documentation for ${repo}\n\nThis is a generated placeholder.`;
-      await new Promise((res) => setTimeout(res, 1000)); // simulate latency
-      onGenerate(fakeOutput);
-    } catch (err) {
-      setError("Failed to generate documentation.");
+      const md = await callGenerate();
+      onGenerate(md);
+    } catch (err: any) {
+      setError(err?.message || "Failed to generate documentation.");
     } finally {
       setLoading(false);
     }
@@ -31,24 +47,32 @@ function PromptTuner({ repo, onGenerate }: PromptTunerProps) {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4 text-green-600">Tune Prompt</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="toolbar mb-3">
+        <h2 className="text-lg font-semibold">Tune Prompt</h2>
+      </div>
+      <form onSubmit={handleSubmit} className="space-y-3">
         <textarea
+          className="textarea min-h-[140px]"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          rows={5}
-          className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
         />
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition"
-        >
-          {loading ? "Generating..." : "Generate Docs"}
-        </button>
-
-        {error && <p className="text-red-600 mt-2">{error}</p>}
+        <div className="flex gap-2">
+          <button type="submit" disabled={loading} className="btn-primary">
+            {loading ? "Generating…" : "Generate Docs"}
+          </button>
+          <button
+            type="button"
+            className="btn-ghost"
+            onClick={() =>
+              setPrompt(
+                "Generate comprehensive documentation including Overview, Installation, Quick Start, API, Configuration, Examples, Troubleshooting."
+              )
+            }
+          >
+            Use Template
+          </button>
+        </div>
+        {error && <p className="text-rose-600 text-sm">{error}</p>}
       </form>
     </div>
   );

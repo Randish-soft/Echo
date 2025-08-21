@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base */
+@layer base {
+  html, body, #root { height: 100%; }
+  body { @apply bg-slate-50 text-slate-900 antialiased; }
+}
+
+/* Reusable components */
+@layer components {
+  .container-narrow { @apply container max-w-[1100px]; }
+  .card { @apply rounded-2xl border bg-white shadow-card p-6; }
+  .btn { @apply inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium border transition; }
+  .btn-primary { @apply btn bg-slate-900 text-white border-slate-900 hover:bg-slate-800; }
+  .btn-ghost { @apply btn bg-white text-slate-700 border-slate-200 hover:bg-slate-50; }
+  .input { @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-400; }
+  .textarea { @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-400; }
+  .toolbar { @apply flex items-center justify-between gap-3; }
+}
+
+/* Markdown */
+.prose {
+  @apply prose-slate;
+}
