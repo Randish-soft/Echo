@@ -1,44 +1,43 @@
-version: "3.9"
+version: '3.8'
 
 services:
-  api-dev:
-    image: node:20-alpine
-    container_name: repodocs-api-dev
-    working_dir: /app
-    command: sh -c "npm install && npm run dev"
-    environment:
-      - PORT=8080
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - GITHUB_TOKEN=${GITHUB_TOKEN}
-    volumes:
-      - ./api:/app
-      - api_node_modules:/app/node_modules
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     ports:
-      - "8081:8080"   # host:container (dev API reachable at http://localhost:8081)
-    networks:
-      - repodocs
-
-  web-dev:
-    image: node:20-alpine
-    container_name: repodocs-web-dev
-    working_dir: /app
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+      - "3000:3000"
     environment:
-      - VITE_API_BASE=/api
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
     volumes:
-      - ./web:/app
-      - web_node_modules:/app/node_modules
-    ports:
-      - "5173:5173"   # Vite dev server with HMR (http://localhost:5173)
+      - ./frontend:/app
+      - /app/node_modules
     depends_on:
-      - api-dev
-    networks:
-      - repodocs
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://mongodb:27017/echo
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=echo
 
 volumes:
-  api_node_modules:
-  web_node_modules:
-
-networks:
-  repodocs:
-    driver: bridge
+  mongodb_data:
