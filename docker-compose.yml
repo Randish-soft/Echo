@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    build: ./DB
+    container_name: echo_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: echo_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - echo_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # C++ Backend (Crow Framework)
+  backend:
+    build: ./backend
+    container_name: echo_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/echo_db
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - REPOS_PATH=/app/data/repositories
+      - SUMMARIES_PATH=/app/data/summaries
+    volumes:
+      - backend_repos:/app/data/repositories
+      - backend_summaries:/app/data/summaries
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - echo_network
+    restart: unless-stopped
+
+  # Next.js Frontend
+  frontend:
+    build: ./frontend
+    container_name: echo_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+    networks:
+      - echo_network
+    restart: unless-stopped
+
+networks:
+  echo_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  backend_repos:
+  backend_summaries:

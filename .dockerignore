@@ -1,0 +1,36 @@
+# Build directories
+build/
+cmake-build-*/
+
+# Environment files
+.env
+.env.local
+
+# Data (will be mounted as volumes)
+data/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Scripts
+build.sh
+setup.sh
+
+# Python artifacts (if any left)
+__pycache__/
+*.pyc
+venv/
+
+# OS files
+.DS_Store
+Thumbs.db
