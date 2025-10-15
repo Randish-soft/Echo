@@ -1,283 +1,501 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import axios from 'axios'
-import ReactMarkdown from 'react-markdown'
-import { FileText, GitBranch, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+import { useEffect, useMemo, useState } from 'react';
+import apiService from './services/apiService';
 
 export default function Home() {
-  const [githubUrl, setGithubUrl] = useState('')
-  const [branch, setBranch] = useState('main')
-  const [loading, setLoading] = useState(false)
-  const [repoId, setRepoId] = useState(null)
-  const [documentation, setDocumentation] = useState(null)
-  const [docType, setDocType] = useState('internal')
-  const [error, setError] = useState(null)
-  const [step, setStep] = useState(1) // 1: Add Repo, 2: Generate Docs, 3: View Docs
+  // Wizard state
+  const [step, setStep] = useState(1);
+
+  // Form state
+  const [repoUrl, setRepoUrl] = useState('');
+  const [branch, setBranch] = useState('main');
+  const [repositories, setRepositories] = useState([]);
+  const [selectedRepo, setSelectedRepo] = useState(null);
+  const [docType, setDocType] = useState('internal');
+  const [audience, setAudience] = useState('developers');
+
+  // UI state
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [connectionStatus, setConnectionStatus] = useState('checking'); // 'checking' | 'connected' | 'error'
+
+  useEffect(() => {
+    checkBackendConnection();
+    loadRepositories();
+  }, []);
+
+  const checkBackendConnection = async () => {
+    try {
+      const health = await apiService.checkHealth();
+      if (health.status === 'healthy') {
+        setConnectionStatus('connected');
+      } else {
+        setConnectionStatus('error');
+        setError('Backend is reachable but reported an unhealthy status.');
+      }
+    } catch (err) {
+      setConnectionStatus('error');
+      setError("Can't reach the backend. Make sure it's running on port 8000.");
+      console.error(err);
+    }
+  };
+
+  const loadRepositories = async () => {
+    try {
+      const data = await apiService.getRepositories();
+      const list = data?.repositories ?? [];
+      setRepositories(list);
+      if (list.length > 0) {
+        setStep(2);
+      }
+    } catch (err) {
+      console.error('Failed to load repositories:', err);
+      setError('Failed to load repositories.');
+    }
+  };
 
   const handleAddRepository = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess('');
 
     try {
-      const response = await axios.post(`${API_URL}/api/repos/add`, {
-        github_url: githubUrl,
-        branch: branch
-      })
+      const result = await apiService.addRepository(repoUrl, branch);
 
-      setRepoId(response.data.repo_id)
-      setStep(2)
-      setError(null)
+      if (result.status === 'success') {
+        setSuccess(result.message || 'Repository added successfully.');
+        setRepoUrl('');
+        setBranch('main');
+        await loadRepositories();
+        setStep(2);
+        if (result.repo_id) setSelectedRepo(result.repo_id);
+      } else {
+        setError(result.error || 'Failed to add repository.');
+      }
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to add repository')
+      setError(err.message || 'Failed to add repository.');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const handleGenerateDocs = async () => {
-    setLoading(true)
-    setError(null)
+  const handleGenerateDocumentation = async () => {
+    if (!selectedRepo) {
+      setError('Please select a repository first.');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setSuccess('');
 
     try {
-      const response = await axios.post(`${API_URL}/api/docs/generate`, {
-        repo_id: repoId,
-        doc_type: docType,
-        audience: 'developers'
-      })
+      const result = await apiService.generateDocumentation(selectedRepo, docType, audience);
 
-      setDocumentation(response.data.documentation)
-      setStep(3)
+      if (result.status === 'success') {
+        setSuccess(result.message || 'Documentation generated successfully!');
+        // You could show a preview modal here using result.documentation
+        console.log('Generated documentation:', result.documentation);
+      } else {
+        setError(result.error || 'Failed to generate documentation.');
+      }
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to generate documentation')
+      setError(err.message || 'Failed to generate documentation.');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const resetForm = () => {
-    setGithubUrl('')
-    setBranch('main')
-    setRepoId(null)
-    setDocumentation(null)
-    setError(null)
-    setStep(1)
-  }
+  const steps = useMemo(
+    () => [
+      { id: 1, label: 'Add Repository' },
+      { id: 2, label: 'Select Repository' },
+      { id: 3, label: 'Generate Documentation' },
+    ],
+    []
+  );
+
+  const StatusBadge = ({ state }) => {
+    if (state === 'checking') {
+      return (
+        <span className="inline-flex items-center gap-2 rounded-full bg-yellow-500/10 px-3 py-1 text-sm text-yellow-300 ring-1 ring-yellow-500/40">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-yellow-400" />
+          Checking backend…
+        </span>
+      );
+    }
+    if (state === 'connected') {
+      return (
+        <span className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-sm text-emerald-300 ring-1 ring-emerald-500/40">
+          <span className="h-2 w-2 rounded-full bg-emerald-400" />
+          Backend connected
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-2 rounded-full bg-rose-500/10 px-3 py-1 text-sm text-rose-300 ring-1 ring-rose-500/40">
+        <span className="h-2 w-2 rounded-full bg-rose-400" />
+        Connection failed
+      </span>
+    );
+  };
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          Welcome to Echo
-        </h1>
-        <p className="text-xl text-gray-600">
-          Automatically generate documentation for any GitHub repository
-        </p>
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100">
+      {/* Top Bar */}
+      <div className="border-b border-white/10 bg-slate-950/60 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-blue-500 to-fuchsia-600 font-black text-white">
+              E
+            </div>
+            <div className="leading-tight">
+              <div className="text-lg font-bold">Echo</div>
+              <div className="text-xs text-slate-400">Documentation Generator</div>
+            </div>
+          </div>
+          <StatusBadge state={connectionStatus} />
+        </div>
       </div>
 
-      {/* Error Display */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start">
-          <AlertCircle className="h-5 w-5 text-red-600 mr-3 mt-0.5" />
-          <div>
-            <h3 className="text-sm font-medium text-red-800">Error</h3>
-            <p className="text-sm text-red-700 mt-1">{error}</p>
-          </div>
+      {/* Content */}
+      <div className="mx-auto max-w-6xl px-6 py-10">
+        {/* Hero */}
+        <div className="mb-8 rounded-2xl border border-white/10 bg-slate-900/60 p-6 shadow-lg">
+          <p className="text-center text-lg text-slate-300">
+            Transform your GitHub repository into comprehensive documentation in seconds.
+          </p>
         </div>
-      )}
 
-      {/* Step 1: Add Repository */}
-      {step === 1 && (
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center mb-6">
-            <div className="bg-indigo-100 rounded-full p-3 mr-4">
-              <GitBranch className="h-6 w-6 text-indigo-600" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">Step 1: Add Repository</h2>
-              <p className="text-gray-600">Enter the GitHub repository URL you want to document</p>
-            </div>
-          </div>
-
-          <form onSubmit={handleAddRepository} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                GitHub Repository URL
-              </label>
-              <input
-                type="text"
-                value={githubUrl}
-                onChange={(e) => setGithubUrl(e.target.value)}
-                placeholder="https://github.com/username/repository"
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Branch (optional)
-              </label>
-              <input
-                type="text"
-                value={branch}
-                onChange={(e) => setBranch(e.target.value)}
-                placeholder="main"
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-indigo-600 text-white py-3 px-4 rounded-md hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="animate-spin h-5 w-5 mr-2" />
-                  Cloning & Analyzing Repository...
-                </>
-              ) : (
-                'Add Repository'
-              )}
-            </button>
-          </form>
-        </div>
-      )}
-
-      {/* Step 2: Generate Documentation */}
-      {step === 2 && (
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center mb-6">
-            <div className="bg-green-100 rounded-full p-3 mr-4">
-              <CheckCircle className="h-6 w-6 text-green-600" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">Repository Added Successfully!</h2>
-              <p className="text-gray-600">Repo ID: <code className="bg-gray-100 px-2 py-1 rounded">{repoId}</code></p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Documentation Type
-              </label>
-              <select
-                value={docType}
-                onChange={(e) => setDocType(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+        {/* Stepper */}
+        <ol className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {steps.map(({ id, label }, idx) => {
+            const isActive = id === step;
+            const isDone = id < step;
+            return (
+              <li
+                key={id}
+                className={`group flex items-center gap-4 rounded-xl border p-4 transition ${
+                  isActive
+                    ? 'border-blue-500/60 bg-blue-500/10'
+                    : isDone
+                    ? 'border-emerald-500/40 bg-emerald-500/5'
+                    : 'border-white/10 bg-slate-900/40'
+                }`}
               >
-                <option value="internal">Internal (Developer Documentation)</option>
-                <option value="external">External (User Documentation)</option>
-              </select>
-            </div>
+                <span
+                  className={`grid h-9 w-9 flex-none place-items-center rounded-full text-sm font-bold ${
+                    isActive
+                      ? 'bg-gradient-to-br from-blue-500 to-fuchsia-600 text-white'
+                      : isDone
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-slate-800 text-slate-300'
+                  }`}
+                >
+                  {isDone ? '✓' : id}
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-sm">{label}</p>
+                  <button
+                    className={`mt-0.5 text-xs underline-offset-2 hover:underline ${
+                      id <= step ? 'text-sky-300' : 'text-slate-500 cursor-not-allowed'
+                    }`}
+                    onClick={() => id <= step && setStep(id)}
+                  >
+                    {id < step ? 'Review' : id === step ? 'Current' : 'Pending'}
+                  </button>
+                </div>
+              </li>
+            );
+          })}
+        </ol>
 
-            <div className="flex space-x-4">
+        {/* Alerts */}
+        {error && (
+          <div className="mb-6 rounded-xl border border-rose-500/40 bg-rose-500/10 p-4 text-rose-200">
+            <div className="flex items-start justify-between">
+              <p className="pr-6">{error}</p>
               <button
-                onClick={handleGenerateDocs}
-                disabled={loading}
-                className="flex-1 bg-indigo-600 text-white py-3 px-4 rounded-md hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
+                className="rounded-md px-2 py-1 text-rose-200/80 hover:bg-rose-400/10"
+                onClick={() => setError('')}
               >
-                {loading ? (
-                  <>
-                    <Loader2 className="animate-spin h-5 w-5 mr-2" />
-                    Generating...
-                  </>
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+        {success && (
+          <div className="mb-6 rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-4 text-emerald-200">
+            <div className="flex items-start justify-between">
+              <p className="pr-6">{success}</p>
+              <button
+                className="rounded-md px-2 py-1 text-emerald-200/80 hover:bg-emerald-400/10"
+                onClick={() => setSuccess('')}
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Panels */}
+        <div className="grid gap-6">
+          {/* Step 1 */}
+          {step === 1 && (
+            <section className="rounded-2xl border border-white/10 bg-slate-900/60 p-6">
+              <header className="mb-6">
+                <h2 className="text-xl font-semibold">1. Add Repository</h2>
+                <p className="mt-1 text-sm text-slate-400">
+                  Enter the GitHub repository URL you want to document.
+                </p>
+              </header>
+
+              <form onSubmit={handleAddRepository} className="grid gap-5">
+                <div>
+                  <label className="mb-2 block text-sm text-slate-300">GitHub Repository URL</label>
+                  <input
+                    type="url"
+                    value={repoUrl}
+                    onChange={(e) => setRepoUrl(e.target.value)}
+                    placeholder="https://github.com/owner/repository"
+                    className="w-full rounded-lg border border-white/10 bg-slate-950 px-4 py-3 text-slate-100 outline-none ring-0 transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 disabled:opacity-60"
+                    required
+                    disabled={loading || connectionStatus !== 'connected'}
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm text-slate-300">Branch (optional)</label>
+                  <input
+                    type="text"
+                    value={branch}
+                    onChange={(e) => setBranch(e.target.value)}
+                    placeholder="main"
+                    className="w-full rounded-lg border border-white/10 bg-slate-950 px-4 py-3 text-slate-100 outline-none ring-0 transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 disabled:opacity-60"
+                    disabled={loading || connectionStatus !== 'connected'}
+                  />
+                </div>
+
+                <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                  {repositories.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setStep(2)}
+                      className="rounded-lg border border-white/10 bg-slate-800 px-4 py-2.5 text-sm text-slate-200 hover:bg-slate-700"
+                    >
+                      Select existing →
+                    </button>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={loading || connectionStatus !== 'connected'}
+                    className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-blue-600 to-fuchsia-600 px-5 py-2.5 text-sm font-semibold text-white shadow hover:from-blue-500 hover:to-fuchsia-500 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {loading ? (
+                      <span className="flex items-center gap-2">
+                        <svg
+                          className="h-4 w-4 animate-spin"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                          />
+                        </svg>
+                        Processing…
+                      </span>
+                    ) : (
+                      'Add Repository'
+                    )}
+                  </button>
+                </div>
+              </form>
+            </section>
+          )}
+
+          {/* Step 2 */}
+          {step === 2 && (
+            <section className="rounded-2xl border border-white/10 bg-slate-900/60 p-6">
+              <header className="mb-6">
+                <h2 className="text-xl font-semibold">2. Select Repository</h2>
+                <p className="mt-1 text-sm text-slate-400">
+                  Choose from your scanned repositories.
+                </p>
+              </header>
+
+              <div className="grid gap-3">
+                {repositories.length === 0 ? (
+                  <div className="rounded-lg border border-white/10 bg-slate-950 p-6 text-center text-slate-400">
+                    No repositories found.
+                    <div className="mt-3">
+                      <button
+                        onClick={() => setStep(1)}
+                        className="text-sky-300 underline underline-offset-4 hover:text-sky-200"
+                      >
+                        ← Add a repository
+                      </button>
+                    </div>
+                  </div>
                 ) : (
-                  <>
-                    <FileText className="h-5 w-5 mr-2" />
-                    Generate Documentation
-                  </>
+                  <ul className="grid max-h-80 gap-3 overflow-y-auto">
+                    {repositories.map((repo) => (
+                      <li key={repo}>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedRepo(repo)}
+                          className={`w-full rounded-lg border p-4 text-left transition ${
+                            selectedRepo === repo
+                              ? 'border-sky-500/60 bg-sky-500/10'
+                              : 'border-white/10 bg-slate-950 hover:bg-slate-800'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium">{repo}</span>
+                            {selectedRepo === repo && (
+                              <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 text-xs text-emerald-300 ring-1 ring-emerald-500/30">
+                                Selected
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
                 )}
-              </button>
-
-              <button
-                onClick={resetForm}
-                className="px-6 py-3 border border-gray-300 rounded-md hover:bg-gray-50"
-              >
-                Start Over
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Step 3: View Documentation */}
-      {step === 3 && documentation && (
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center">
-              <div className="bg-indigo-100 rounded-full p-3 mr-4">
-                <FileText className="h-6 w-6 text-indigo-600" />
               </div>
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">Documentation Generated</h2>
-                <p className="text-gray-600">Type: {docType === 'internal' ? 'Internal (Developer)' : 'External (User)'}</p>
+
+              <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+                <button
+                  onClick={() => setStep(1)}
+                  className="rounded-lg border border-white/10 bg-slate-800 px-4 py-2.5 text-sm text-slate-200 hover:bg-slate-700"
+                >
+                  ← Back
+                </button>
+                <button
+                  onClick={() => setStep(3)}
+                  disabled={!selectedRepo}
+                  className="rounded-lg bg-gradient-to-r from-blue-600 to-fuchsia-600 px-5 py-2.5 text-sm font-semibold text-white shadow hover:from-blue-500 hover:to-fuchsia-500 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Continue →
+                </button>
               </div>
-            </div>
-            <button
-              onClick={resetForm}
-              className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
-            >
-              Generate New
-            </button>
-          </div>
+            </section>
+          )}
 
-          <div className="prose max-w-none bg-gray-50 rounded-lg p-6 border border-gray-200">
-            <ReactMarkdown>{documentation}</ReactMarkdown>
-          </div>
+          {/* Step 3 */}
+          {step === 3 && (
+            <section className="rounded-2xl border border-white/10 bg-slate-900/60 p-6">
+              <header className="mb-6">
+                <h2 className="text-xl font-semibold">3. Generate Documentation</h2>
+                <p className="mt-1 text-sm text-slate-400">
+                  Customize your output and generate docs.
+                </p>
+              </header>
 
-          <div className="mt-6 flex space-x-4">
-            <button
-              onClick={() => {
-                const blob = new Blob([documentation], { type: 'text/markdown' })
-                const url = URL.createObjectURL(blob)
-                const a = document.createElement('a')
-                a.href = url
-                a.download = `documentation-${docType}-${repoId}.md`
-                a.click()
-              }}
-              className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-            >
-              Download as Markdown
-            </button>
-          </div>
+              <div className="grid gap-5">
+                <div>
+                  <label className="mb-2 block text-sm text-slate-300">Documentation Type</label>
+                  <select
+                    value={docType}
+                    onChange={(e) => setDocType(e.target.value)}
+                    className="w-full rounded-lg border border-white/10 bg-slate-950 px-4 py-3 text-slate-100 outline-none focus:border-sky-500/60 focus:ring-2 focus:ring-sky-500/20"
+                  >
+                    <option value="internal">Internal (engineering docs)</option>
+                    <option value="external">External (user-facing guides)</option>
+                  </select>
+                  <p className="mt-2 text-xs text-slate-400">
+                    {docType === 'internal'
+                      ? 'Focused on code structure, APIs, architecture, and developer notes.'
+                      : 'Focused on getting started, concepts, how-tos, and FAQs.'}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm text-slate-300">Target Audience</label>
+                  <select
+                    value={audience}
+                    onChange={(e) => setAudience(e.target.value)}
+                    className="w-full rounded-lg border border-white/10 bg-slate-950 px-4 py-3 text-slate-100 outline-none focus:border-sky-500/60 focus:ring-2 focus:ring-sky-500/20"
+                  >
+                    <option value="developers">Developers</option>
+                    <option value="technical">Technical Users</option>
+                    <option value="business">Business Stakeholders</option>
+                    <option value="general">General Users</option>
+                  </select>
+                </div>
+
+                {selectedRepo && (
+                  <div className="rounded-lg border border-white/10 bg-slate-950 p-4">
+                    <p className="text-xs text-slate-400">Selected Repository</p>
+                    <p className="truncate font-medium">{selectedRepo}</p>
+                  </div>
+                )}
+
+                <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+                  <button
+                    onClick={() => setStep(2)}
+                    className="rounded-lg border border-white/10 bg-slate-800 px-4 py-2.5 text-sm text-slate-200 hover:bg-slate-700"
+                  >
+                    ← Back
+                  </button>
+                  <button
+                    onClick={handleGenerateDocumentation}
+                    disabled={loading}
+                    className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-5 py-2.5 text-sm font-semibold text-white shadow hover:from-emerald-500 hover:to-teal-500 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {loading ? (
+                      <span className="flex items-center gap-2">
+                        <svg
+                          className="h-4 w-4 animate-spin"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                          />
+                        </svg>
+                        Generating…
+                      </span>
+                    ) : (
+                      '🚀 Generate Documentation'
+                    )}
+                  </button>
+                </div>
+              </div>
+            </section>
+          )}
         </div>
-      )}
 
-      {/* Features Section */}
-      {step === 1 && (
-        <div className="grid md:grid-cols-3 gap-6 mt-12">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="bg-blue-100 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-              <GitBranch className="h-6 w-6 text-blue-600" />
-            </div>
-            <h3 className="text-lg font-semibold mb-2">GitHub Integration</h3>
-            <p className="text-gray-600">Automatically clone and analyze any public or private GitHub repository</p>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="bg-green-100 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-              <FileText className="h-6 w-6 text-green-600" />
-            </div>
-            <h3 className="text-lg font-semibold mb-2">Smart Analysis</h3>
-            <p className="text-gray-600">Detect file purposes, functions, classes, and dependencies automatically</p>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="bg-purple-100 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-              <CheckCircle className="h-6 w-6 text-purple-600" />
-            </div>
-            <h3 className="text-lg font-semibold mb-2">Instant Docs</h3>
-            <p className="text-gray-600">Generate comprehensive documentation in seconds, not hours</p>
-          </div>
+        {/* Footer */}
+        <div className="mt-10 text-center text-xs text-slate-500">
+          Echo • Built with ❤️ by Randish • Powered by C++ &amp; Next.js
         </div>
-      )}
+      </div>
     </div>
-  )
+  );
 }

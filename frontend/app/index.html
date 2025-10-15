@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Echo — Documentation Generator</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:#0f172a;
+      --panel-2:#0b132a;
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+      --border:#1e293b;
+      --primary:#60a5fa;
+      --primary-strong:#3b82f6;
+      --accent:#a78bfa;
+      --success:#22c55e;
+      --danger:#ef4444;
+      --radius:14px;
+      --shadow:0 8px 30px rgba(2,6,23,.45);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background:
+        radial-gradient(1200px 800px at 10% -10%, rgba(96,165,250,.12), transparent 60%),
+        radial-gradient(1000px 700px at 110% 0%, rgba(167,139,250,.12), transparent 60%),
+        var(--bg);
+      color:var(--text);
+      line-height:1.6;
+      display:flex;
+      flex-direction:column;
+    }
+
+    /* Header */
+    header{
+      position:sticky; top:0; z-index:10;
+      backdrop-filter:saturate(120%) blur(8px);
+      background:rgba(11,18,32,.6);
+      border-bottom:1px solid var(--border);
+    }
+    .header-inner{
+      max-width:1100px; margin:0 auto; padding:14px 20px;
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .brand{display:flex; align-items:center; gap:12px}
+    .logo{
+      width:42px; height:42px; border-radius:12px;
+      display:grid; place-items:center;
+      background:linear-gradient(135deg, var(--primary), var(--accent));
+      font-weight:900; color:white; box-shadow:var(--shadow);
+    }
+    .title{font-size:1.1rem; font-weight:700}
+    .subtitle{font-size:.75rem; color:var(--muted); margin-top:-2px}
+
+    nav ul{list-style:none; display:flex; gap:18px}
+    nav a{color:var(--muted); text-decoration:none; font-weight:600; font-size:.95rem}
+    nav a:hover, nav a.active{color:var(--primary)}
+
+    /* Main container */
+    main{max-width:1100px; width:100%; margin:24px auto; padding:0 20px; flex:1}
+
+    /* Hero */
+    .hero{
+      background:linear-gradient(180deg, rgba(59,130,246,.10), rgba(167,139,250,.08));
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:24px;
+      text-align:center;
+      box-shadow:var(--shadow);
+    }
+    .hero h2{font-size:1.35rem; font-weight:800; letter-spacing:.2px}
+    .hero p{color:var(--muted); margin-top:6px}
+
+    /* Stepper */
+    .stepper{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:18px 0 22px}
+    .step{
+      display:flex; align-items:center; gap:12px;
+      border:1px solid var(--border); border-radius:12px; padding:10px 12px;
+      background:rgba(255,255,255,.02);
+    }
+    .step.active{border-color:rgba(96,165,250,.45); background:rgba(59,130,246,.08)}
+    .step.done{border-color:rgba(34,197,94,.45); background:rgba(34,197,94,.06)}
+    .step .bubble{
+      width:32px; height:32px; border-radius:999px; display:grid; place-items:center; font-weight:800;
+      background:#0b1220; border:1px solid var(--border); color:var(--muted);
+    }
+    .step.active .bubble{background:linear-gradient(135deg,var(--primary),var(--accent)); color:white; border:none}
+    .step.done .bubble{background:#16a34a; color:white; border:none}
+    .step .label{font-size:.9rem; color:#cbd5e1}
+
+    /* Cards */
+    .card{
+      background:linear-gradient(180deg, rgba(15,23,42,.9), rgba(11,19,42,.9));
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:20px;
+      box-shadow:var(--shadow);
+    }
+    .card h3{font-size:1rem; font-weight:800; margin-bottom:6px}
+    .desc{color:var(--muted); font-size:.95rem; margin-bottom:14px}
+
+    /* Form */
+    .form-group{margin-bottom:14px}
+    label{display:block; font-weight:600; margin-bottom:6px; color:#cbd5e1}
+    input, select{
+      width:100%; padding:12px 14px; font-size:1rem;
+      color:var(--text);
+      background:#0a1223; border:1px solid var(--border); border-radius:12px;
+      outline:none; transition:border-color .15s, box-shadow .15s;
+    }
+    input::placeholder{color:#60708d}
+    input:focus, select:focus{border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+
+    .row{display:flex; gap:10px}
+    @media (max-width:640px){.row{flex-direction:column}}
+
+    /* Buttons */
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      border:none; cursor:pointer; font-weight:800;
+      padding:12px 16px; border-radius:12px; transition:transform .1s ease, background .2s ease;
+    }
+    .btn:active{transform:translateY(1px)}
+    .btn-primary{background:linear-gradient(135deg,var(--primary-strong),var(--accent)); color:white}
+    .btn-primary:hover{background:linear-gradient(135deg,#538af7,#9d86fa)}
+    .btn-secondary{background:#0f1b34; color:#d1d5db; border:1px solid var(--border)}
+    .btn-secondary:hover{background:#13203a}
+    .btn-muted{background:#0f172a; color:#cbd5e1; border:1px dashed var(--border)}
+    .btn[disabled]{opacity:.55; cursor:not-allowed}
+
+    /* Status */
+    .status{
+      margin-top:10px; padding:10px 12px; border-radius:12px; font-size:.92rem; display:none;
+      border:1px solid transparent;
+    }
+    .status.show{display:block}
+    .status.success{background:rgba(34,197,94,.12); color:#86efac; border-color:rgba(34,197,94,.35)}
+    .status.error{background:rgba(239,68,68,.12); color:#fca5a5; border-color:rgba(239,68,68,.35)}
+    .status.loading{background:rgba(59,130,246,.12); color:#93c5fd; border-color:rgba(59,130,246,.35)}
+    .status [role="img"]{margin-right:6px}
+
+    /* Output */
+    pre{
+      background:#0a1020; color:#e5e7eb; border:1px solid var(--border);
+      border-radius:12px; padding:14px; overflow:auto; max-height:360px;
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size:.92rem;
+    }
+
+    /* Footer */
+    footer{
+      border-top:1px solid var(--border);
+      padding:18px 20px; text-align:center; color:var(--muted); font-size:.85rem;
+      background:rgba(11,18,32,.6); backdrop-filter:blur(8px);
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <div class="logo">E</div>
+        <div>
+          <div class="title">Echo</div>
+          <div class="subtitle">Documentation Generator</div>
+        </div>
+      </div>
+      <nav>
+        <ul>
+          <li><a href="#home" class="active">Home</a></li>
+          <li><a href="#repositories">Repositories</a></li>
+          <li><a href="#docs">Docs</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="home">
+    <section class="hero">
+      <h2>Transform code into clear, useful docs — fast.</h2>
+      <p>Connect a GitHub repo, pick your audience, and generate polished documentation in seconds.</p>
+    </section>
+
+    <!-- Stepper -->
+    <div class="stepper" aria-label="Progress">
+      <div class="step active" id="stepBadge1">
+        <div class="bubble">1</div>
+        <div class="label">Add Repository</div>
+      </div>
+      <div class="step" id="stepBadge2">
+        <div class="bubble">2</div>
+        <div class="label">Select Repository</div>
+      </div>
+      <div class="step" id="stepBadge3">
+        <div class="bubble">3</div>
+        <div class="label">Generate Documentation</div>
+      </div>
+    </div>
+
+    <section class="grid" style="display:grid; gap:16px">
+      <!-- Step 1 -->
+      <div class="card" id="card1">
+        <h3>1. Add Repository</h3>
+        <p class="desc">Paste your GitHub repository URL. Optionally specify a branch.</p>
+        <form id="addRepoForm">
+          <div class="form-group">
+            <label for="repoUrl">GitHub Repository URL</label>
+            <div class="row">
+              <input id="repoUrl" type="url" placeholder="https://github.com/owner/repo" required/>
+              <button id="addRepoBtn" class="btn btn-primary">Add</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="branch">Branch (optional)</label>
+            <input id="branch" type="text" placeholder="main" value="main"/>
+          </div>
+        </form>
+        <div id="addRepoStatus" class="status" aria-live="polite"></div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="card" id="card2">
+        <h3>2. Select Repository</h3>
+        <p class="desc">Choose from repositories already scanned.</p>
+        <div class="form-group">
+          <label for="repoSelect">Available Repositories</label>
+          <select id="repoSelect" aria-label="Available repositories">
+            <option value="">— Select a repository —</option>
+          </select>
+        </div>
+        <div class="row" style="justify-content:space-between">
+          <button id="refreshReposBtn" class="btn btn-secondary" type="button">Refresh</button>
+          <button id="goToStep3" class="btn btn-primary" type="button" disabled>Continue →</button>
+        </div>
+        <div id="selectStatus" class="status" aria-live="polite"></div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="card" id="card3">
+        <h3>3. Generate Documentation</h3>
+        <p class="desc">Tune the tone and focus for your audience, then generate.</p>
+        <form id="generateDocForm">
+          <div class="form-group">
+            <label for="docType">Documentation Type</label>
+            <select id="docType">
+              <option value="internal">Internal (engineering docs)</option>
+              <option value="external">External (user guides)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="audience">Target Audience</label>
+            <select id="audience">
+              <option value="developers">Developers</option>
+              <option value="technical">Technical Users</option>
+              <option value="business">Business Stakeholders</option>
+              <option value="general">General Users</option>
+            </select>
+          </div>
+          <div class="row" style="justify-content:space-between">
+            <button id="backToStep2" class="btn btn-secondary" type="button">← Back</button>
+            <button id="generateBtn" class="btn btn-primary" disabled>🚀 Generate</button>
+          </div>
+        </form>
+
+        <div id="generateStatus" class="status" aria-live="polite"></div>
+
+        <div id="docOutput" style="display:none; margin-top:12px;">
+          <pre id="docContent"></pre>
+          <div class="row" style="margin-top:10px; justify-content:flex-end">
+            <button id="copyBtn" class="btn btn-secondary" type="button">Copy</button>
+            <button id="downloadBtn" class="btn btn-muted" type="button">Download</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Echo — Built with ❤️ by Randish • Powered by C++ &amp; Next.js
+  </footer>
+
+  <script>
+    // Minimal interactivity to demonstrate the flow.
+    const stepBadges = [
+      document.getElementById('stepBadge1'),
+      document.getElementById('stepBadge2'),
+      document.getElementById('stepBadge3')
+    ];
+    const setStep = (n) => {
+      stepBadges.forEach((el, i) => {
+        el.classList.remove('active','done');
+        if (i < n-1) el.classList.add('done');
+        if (i === n-1) el.classList.add('active');
+      });
+    };
+
+    // Mock state (replace with your API logic)
+    const addRepoForm = document.getElementById('addRepoForm');
+    const addRepoStatus = document.getElementById('addRepoStatus');
+    const repoSelect = document.getElementById('repoSelect');
+    const selectStatus = document.getElementById('selectStatus');
+    const refreshReposBtn = document.getElementById('refreshReposBtn');
+    const goToStep3 = document.getElementById('goToStep3');
+    const backToStep2 = document.getElementById('backToStep2');
+    const generateBtn = document.getElementById('generateBtn');
+    const generateStatus = document.getElementById('generateStatus');
+    const docOutput = document.getElementById('docOutput');
+    const docContent = document.getElementById('docContent');
+    const copyBtn = document.getElementById('copyBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    const showStatus = (el, type, msg) => {
+      el.className = 'status ' + type + ' show';
+      el.textContent = msg;
+    };
+
+    addRepoForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const url = document.getElementById('repoUrl').value.trim();
+      if (!url) return;
+      showStatus(addRepoStatus, 'loading', 'Scanning repository…');
+      setTimeout(() => {
+        // pretend success
+        showStatus(addRepoStatus, 'success', 'Repository added!');
+        // populate selector
+        const opt = document.createElement('option');
+        opt.value = '28f6906f2063';
+        opt.textContent = '28f6906f2063';
+        repoSelect.appendChild(opt);
+        setStep(2);
+        goToStep3.disabled = !repoSelect.value;
+      }, 800);
+    });
+
+    refreshReposBtn.addEventListener('click', () => {
+      showStatus(selectStatus, 'loading', 'Refreshing repositories…');
+      setTimeout(() => {
+        // pretend one repo available
+        if (![...repoSelect.options].some(o => o.value === '28f6906f2063')) {
+          const opt = document.createElement('option');
+          opt.value = '28f6906f2063';
+          opt.textContent = '28f6906f2063';
+          repoSelect.appendChild(opt);
+        }
+        showStatus(selectStatus, 'success', 'Repositories updated.');
+        goToStep3.disabled = !repoSelect.value;
+      }, 500);
+    });
+
+    repoSelect.addEventListener('change', () => {
+      goToStep3.disabled = !repoSelect.value;
+      generateBtn.disabled = !repoSelect.value;
+    });
+
+    goToStep3.addEventListener('click', () => setStep(3));
+    backToStep2.addEventListener('click', () => setStep(2));
+
+    document.getElementById('generateDocForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!repoSelect.value) return;
+      showStatus(generateStatus, 'loading', 'Generating documentation…');
+      docOutput.style.display = 'none';
+      setTimeout(() => {
+        showStatus(generateStatus, 'success', 'Documentation ready!');
+        docContent.textContent = `# Project Documentation
+
+Repository: ${repoSelect.value}
+
+## Overview
+Generated content goes here…
+
+## Getting Started
+1. Install deps
+2. Run the app
+3. Profit 🚀`;
+        docOutput.style.display = 'block';
+      }, 900);
+    });
+
+    copyBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(docContent.textContent);
+        alert('Copied to clipboard!');
+      } catch(_) {}
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      const blob = new Blob([docContent.textContent], { type: 'text/markdown;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'documentation.md';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>
