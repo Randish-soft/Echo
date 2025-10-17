@@ -1,0 +1,22 @@
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_ROOT_USER_ACTION=ignore
+
+WORKDIR /app
+
+# Install only Python deps (quiet)
+COPY requirements.txt .
+RUN pip install -q -r requirements.txt
+
+# App code (also live-mounted by compose)
+COPY app ./app
+
+# Data dirs
+RUN mkdir -p /app/data/repositories /app/data/summaries
+
+EXPOSE 8000
+# uvicorn started by docker-compose command (keeps reload in compose)

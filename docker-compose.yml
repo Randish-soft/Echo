@@ -1,4 +1,5 @@
 services:
+  # PostgreSQL
   db:
     build: ./DB
     container_name: echo_db
@@ -13,23 +14,32 @@ services:
     networks:
       - echo_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
     restart: unless-stopped
 
+  # C++ backend (Crow)
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      # IMPORTANT: you have a file named "dockerfile" (lowercase) with your C++ build.
+      # Point to it explicitly to avoid picking any Python Dockerfile by accident.
+      dockerfile: dockerfile
     container_name: echo_backend
     environment:
-      DATABASE_URL: postgresql://postgres:password@db:5432/echo_db
+      # Keep these for future use by your C++ services if needed
       GITHUB_TOKEN: ${GITHUB_TOKEN}
       REPOS_PATH: /app/data/repositories
       SUMMARIES_PATH: /app/data/summaries
+      # Add DB URL if/when the C++ binary needs it
+      DATABASE_URL: postgresql://postgres:password@db:5432/echo_db
     ports:
       - "8000:8000"
     volumes:
+      # Only mount data dirs; do NOT bind-mount code over /app (it would hide /app/build/echo_server)
       - backend_repos:/app/data/repositories
       - backend_summaries:/app/data/summaries
     depends_on:
@@ -37,30 +47,35 @@ services:
         condition: service_healthy
     networks:
       - echo_network
+    # Your Crow app listens on 8000; the binary is set via CMD in the Dockerfile.
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8000/api/health"]
-      interval: 10s
-      timeout: 5s
+      # Crow exposes /api/health in your main.cpp
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8000/api/health > /dev/null || exit 1"]
+      interval: 5s
+      timeout: 3s
       retries: 10
+      start_period: 10s
     restart: unless-stopped
 
+  # Next.js frontend
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
     container_name: echo_frontend
     environment:
       NEXT_TELEMETRY_DISABLED: "1"
       CHOKIDAR_USEPOLLING: "1"
       WATCHPACK_POLLING: "1"
       NODE_ENV: development
-      NEXT_PUBLIC_API_BASE: "http://backend:8000"
+      # Your Crow endpoints are under /api
+      NEXT_PUBLIC_API_BASE: "http://backend:8000/api"
     ports:
       - "3000:3000"
     volumes:
-      - ./frontend:/app         # live code
-      - /app/node_modules       # keep container deps
-      - /app/.next              # keep build cache
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
     command: npm run dev -- -H 0.0.0.0 -p 3000
     depends_on:
       backend:

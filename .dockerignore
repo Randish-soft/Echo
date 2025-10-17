@@ -40,3 +40,11 @@ node_modules
 .git
 Dockerfile
 Dockerfile.dev
+
+**/__pycache__/
+**/.pytest_cache/
+**/.mypy_cache/
+**/.DS_Store
+**/.venv
+node_modules
+frontend/.next

@@ -1,0 +1,18 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+ENV NEXT_TELEMETRY_DISABLED=1 \
+    CI=false
+
+# Install deps first for better caching
+COPY package*.json ./
+RUN npm ci --no-audit --no-fund
+
+# Copy app (will be overridden by volume at runtime, but needed for image build)
+COPY . .
+
+EXPOSE 3000
+
+# Next dev server, listen on all interfaces
+CMD ["npm", "run", "dev", "--", "-H", "0.0.0.0", "-p", "3000"]
