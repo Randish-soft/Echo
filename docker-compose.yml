@@ -58,23 +58,28 @@ services:
       NEXT_TELEMETRY_DISABLED: "1"
       CHOKIDAR_USEPOLLING: "1"
       WATCHPACK_POLLING: "1"
-
-      # 👇 This is the key fix:
-      # Browser fetches from localhost:8000 (host machine), not the Docker network.
-      NEXT_PUBLIC_API_BASE: "http://localhost:8000"
+      # 👇 Allows frontend (browser) to reach backend through the network
+      NEXT_PUBLIC_API_BASE: "http://echo_backend:8000"
 
     ports:
       - "3000:3000"
+
+    # 👇 This ensures your local ./frontend folder overwrites /app in the container
+    # and live-syncs code edits (so Docker can’t use stale files)
     volumes:
       - ./frontend:/app
       - /app/node_modules
       - /app/.next
+
     command: npm run dev
+
     depends_on:
       backend:
         condition: service_healthy
+
     networks:
       - echo_network
+
     restart: unless-stopped
 
 networks:

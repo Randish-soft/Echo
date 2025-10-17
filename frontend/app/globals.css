@@ -9,25 +9,24 @@
    Theme Root: Light/Dark + Design Tokens
 --------------------------------------------------------*/
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 
-  --color-bg: 255 255 255; /* white base */
-  --color-surface: 248 250 252; /* slate-50 */
-  --color-border: 0 0 0 / 0.1;
-  --color-text: 15 23 42; /* slate-900 */
-  --color-accent: 37 99 235; /* blue-600 */
+  /* semantic design tokens (easier theming later) */
+  --color-bg: 15 23 42; /* slate-900 */
+  --color-surface: 30 41 59; /* slate-800 */
+  --color-border: 255 255 255 / 0.08;
+  --color-text: 226 232 240; /* slate-200 */
+  --color-accent: 56 189 248; /* sky-400 */
   --radius-lg: 1rem;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   :root {
-    color-scheme: dark;
-
-    --color-bg: 15 23 42; /* slate-900 */
-    --color-surface: 30 41 59; /* slate-800 */
-    --color-border: 255 255 255 / 0.08;
-    --color-text: 226 232 240; /* slate-200 */
-    --color-accent: 56 189 248; /* sky-400 */
+    --color-bg: 241 245 249; /* slate-100 */
+    --color-surface: 255 255 255;
+    --color-border: 0 0 0 / 0.1;
+    --color-text: 15 23 42; /* slate-900 */
+    --color-accent: 37 99 235; /* blue-600 */
   }
 }
 
@@ -54,6 +53,7 @@ body {
   line-height: 1.65;
 }
 
+/* Subtle motion safety */
 @media (prefers-reduced-motion: no-preference) {
   * {
     scroll-behavior: smooth;
@@ -68,16 +68,14 @@ body {
   }
 }
 
-/* -------------------------------------------------------
-   Text selection (preserves black text)
---------------------------------------------------------*/
+/* Text selection */
 ::selection {
-  background: rgba(148, 163, 184, 0.35); /* slate-400/35 */
-  color: inherit; /* keep text visible when selecting */
+  background: rgba(56, 189, 248, 0.35); /* sky-400/35 */
+  color: #fff;
 }
 
 /* -------------------------------------------------------
-   Focus Styles
+   Accessible Focus Styles
 --------------------------------------------------------*/
 :focus-visible {
   outline: 2px solid rgb(var(--color-accent) / 0.6);
@@ -89,7 +87,7 @@ body {
    Links
 --------------------------------------------------------*/
 a {
-  @apply text-blue-600 hover:text-blue-500 transition-colors;
+  @apply text-sky-400 hover:text-sky-300 transition-colors;
 }
 
 /* -------------------------------------------------------
@@ -105,20 +103,20 @@ a {
    Cards & Panels
 --------------------------------------------------------*/
 .card {
-  @apply rounded-2xl border border-gray-200 bg-gray-50 shadow-sm;
+  @apply rounded-2xl border border-white/10 bg-slate-900/60 shadow-lg backdrop-blur-sm;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .card:hover {
-  @apply shadow-md;
+  @apply shadow-xl;
   transform: translateY(-1px);
 }
 
 /* -------------------------------------------------------
-   Scrollbar
+   Scrollbar (modern + smooth)
 --------------------------------------------------------*/
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+  scrollbar-color: rgb(148 163 184 / 0.3) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -126,31 +124,44 @@ a {
   width: 10px;
 }
 *::-webkit-scrollbar-thumb {
-  background-color: rgba(148, 163, 184, 0.4);
+  background-color: rgb(148 163 184 / 0.35);
   border-radius: 999px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 *::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(148, 163, 184, 0.6);
+  background-color: rgb(148 163 184 / 0.55);
 }
 
 /* -------------------------------------------------------
-   Inputs & Selects (light gray boxes, black text)
+   Reusable Utilities
 --------------------------------------------------------*/
-@layer components {
-  .input {
-    @apply w-full rounded-lg border border-gray-300
-           bg-gray-100 text-gray-900 placeholder:text-gray-500
-           px-3 py-2
-           focus:outline-none focus:ring-2 focus:ring-blue-500/60 focus:border-blue-500/50;
-  }
-  .select {
-    @apply w-full rounded-lg border border-gray-300
-           bg-gray-100 text-gray-900
-           px-3 py-2
-           focus:outline-none focus:ring-2 focus:ring-blue-500/60 focus:border-blue-500/50;
-  }
+.text-gradient {
+  background-image: linear-gradient(135deg, #38bdf8, #a78bfa);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hr {
+  @apply border-t border-white/10 my-6;
+}
+
+/* -------------------------------------------------------
+   Badges
+--------------------------------------------------------*/
+.badge {
+  @apply inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium;
+  backdrop-filter: blur(6px);
+}
+.badge--ok {
+  @apply bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/30;
+}
+.badge--warn {
+  @apply bg-amber-500/10 text-amber-300 ring-1 ring-amber-500/30;
+}
+.badge--err {
+  @apply bg-rose-500/10 text-rose-300 ring-1 ring-rose-500/30;
 }
 
 /* -------------------------------------------------------
@@ -161,11 +172,11 @@ a {
 }
 
 .btn-primary {
-  @apply text-white bg-black hover:bg-gray-900 focus-visible:ring-2 focus-visible:ring-blue-500/50;
+  @apply text-white bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 focus-visible:ring-2 focus-visible:ring-sky-500/50;
 }
 
 .btn-secondary {
-  @apply text-gray-800 border border-gray-300 bg-white hover:bg-gray-100;
+  @apply text-slate-200 border border-white/10 bg-slate-800 hover:bg-slate-700;
 }
 
 .btn-success {
@@ -180,12 +191,75 @@ pre, code, kbd, samp {
 }
 
 pre {
-  @apply rounded-xl border border-gray-200 bg-gray-100 p-4 text-sm overflow-auto;
+  @apply rounded-xl border border-white/10 bg-slate-950/90 p-4 text-sm overflow-auto;
 }
 
 /* -------------------------------------------------------
    Footer
 --------------------------------------------------------*/
 .footer {
-  @apply border-t border-gray-200 bg-gray-50 text-center text-xs text-gray-500 py-6;
+  @apply border-t border-white/10 bg-slate-950/70 backdrop-blur-sm text-center text-xs text-slate-400 py-6;
+}
+/* -------------------------------------------------------
+   Markdown Editor + PDF Preview (Responsive Layout)
+--------------------------------------------------------*/
+
+/* Wrapper grid for both panels */
+.editor-preview-grid {
+  @apply grid gap-6 mt-8;
+}
+
+/* Two columns on desktop, stacked on smaller screens */
+@media (min-width: 768px) {
+  .editor-preview-grid {
+    @apply grid-cols-2;
+  }
+}
+
+/* Each section (editor / preview) */
+.editor-section {
+  @apply flex flex-col h-[70vh] min-h-[400px];
+}
+
+@media (max-width: 767px) {
+  .editor-section {
+    @apply h-auto min-h-[300px];
+  }
+}
+
+/* Markdown textarea styling */
+.editor-textarea {
+  @apply flex-1 resize-none font-mono text-sm bg-slate-800 text-slate-100 border border-white/10 rounded-lg p-3 
+         focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-slate-900;
+}
+
+/* Live PDF preview styling */
+.pdf-preview {
+  @apply flex-1 overflow-auto bg-white border border-gray-300 rounded-lg p-4 shadow-inner text-black;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Markdown typography inside the preview */
+.pdf-preview .prose {
+  max-width: none;
+  color: #000;
+}
+
+.pdf-preview .prose h1,
+.pdf-preview .prose h2,
+.pdf-preview .prose h3 {
+  color: #000;
+}
+
+.pdf-preview .prose code {
+  background: #f3f4f6;
+  color: #1f2937;
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.25rem;
+}
+
+/* Download button */
+.download-btn {
+  @apply btn-primary mt-3 w-fit;
 }

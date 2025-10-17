@@ -184,7 +184,6 @@ export default function DocGenerator({
                   {documentation || ""}
                 </ReactMarkdown>
               </div>
-
             </div>
             <button
               type="button"
