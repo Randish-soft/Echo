@@ -27,9 +27,6 @@ module.exports = {
           accent: '#a78bfa',  // violet-400/500
         },
       },
-      backgroundImage: {
-        'brand-gradient': 'linear-gradient(135deg, #3b82f6, #a78bfa)',
-      },
     },
   },
   plugins: [

@@ -1,12 +1,28 @@
--- ./db/init/001_echo.sql
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 CREATE EXTENSION IF NOT EXISTS "hstore";
 
--- Schema and app role
-CREATE SCHEMA IF NOT EXISTS echo AUTHORIZATION CURRENT_USER;
+CREATE SCHEMA IF NOT EXISTS echo;
 
--- If you want a dedicated app user (use env or hardcode with care):
--- CREATE USER echo_app WITH PASSWORD 'change-me' LOGIN;
--- GRANT USAGE ON SCHEMA echo TO echo_app;
--- ALTER DEFAULT PRIVILEGES IN SCHEMA echo GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO echo_app;
+-- Repositories we know about (one row per URL+branch)
+CREATE TABLE IF NOT EXISTS echo.repositories (
+  id            uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  url           text NOT NULL,
+  branch        text NOT NULL DEFAULT 'main',
+  created_at    timestamptz NOT NULL DEFAULT now(),
+  last_used_at  timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (url, branch)
+);
+
+-- Optional: track “last selected” per (anonymous) client token
+-- If you have auth/users, swap client_token for user_id.
+CREATE TABLE IF NOT EXISTS echo.repo_selections (
+  id            uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  client_token  text NOT NULL,
+  repo_id       uuid NOT NULL REFERENCES echo.repositories(id) ON DELETE CASCADE,
+  selected_at   timestamptz NOT NULL DEFAULT now()
+);
+
+-- Helpful indexes
+CREATE INDEX IF NOT EXISTS idx_repositories_url_trgm ON echo.repositories USING gin (url gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_repo_selections_token_time ON echo.repo_selections (client_token, selected_at DESC);
