@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import RepoAdder from "./components/RepoAdder";
-import RepoSelector from "./components/RepoSelector";
-import DocGenerator from "./components/DocGenerator";
+import RepoAdder from "../components/RepoAdder.jsx";
+import RepoSelector from "../components/RepoSelector.jsx";
+import DocGenerator from "../components/DocGenerator.jsx";
 
 export default function HomePage() {
   const [step, setStep] = useState(1);

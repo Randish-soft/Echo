@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import api from "../services/apiService";
+import api from "../app/services/apiService";
 
 /**
  * DocGenerator

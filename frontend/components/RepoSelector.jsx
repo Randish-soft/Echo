@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import api from "../services/apiService";
+import api from "../app/services/apiService";
 
 /**
  * RepoSelector
