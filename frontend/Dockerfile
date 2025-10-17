@@ -1,18 +1,23 @@
-FROM node:18-alpine
+FROM node:20-alpine
+
+RUN apk add --no-cache libc6-compat curl
 
 WORKDIR /app
 
-# Copy package files
+# Install deps first (cached)
 COPY package*.json ./
-
-# Install dependencies
 RUN npm install
 
-# Copy application files
+# Copy rest (will be overridden by bind mount at runtime)
 COPY . .
 
-# Expose port
+ENV NODE_ENV=development
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV CHOKIDAR_USEPOLLING=1
+ENV WATCHPACK_POLLING=1
+ENV HOST=0.0.0.0
+ENV PORT=3000
+
 EXPOSE 3000
 
-# Run development server
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "dev", "--", "-H", "0.0.0.0", "-p", "3000"]
