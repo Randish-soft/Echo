@@ -1,4 +1,4 @@
-// tailwind.config.js
+/** @type {import('tailwindcss').Config} */
 export default {
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
@@ -7,17 +7,10 @@ export default {
   ],
   theme: {
     extend: {
-      colors: {
-        surface: "rgb(var(--color-surface) / <alpha-value>)",
-      },
-      borderRadius: {
-        xl: "1rem",
-        "2xl": "1.25rem",
+      fontFamily: {
+        sans: ["Inter", "ui-sans-serif", "system-ui"],
       },
     },
   },
-  plugins: [
-    // require('@tailwindcss/typography'), // optional
-    // require('@tailwindcss/forms'), // optional for better form UI
-  ],
+  plugins: [],
 };

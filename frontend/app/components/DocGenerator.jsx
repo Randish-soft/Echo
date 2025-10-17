@@ -2,17 +2,15 @@
 
 import { useState } from "react";
 import api from "../services/apiService";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import html2pdf from "html2pdf.js";
 
 /**
  * DocGenerator
- * Step 3: Pick doc_type + audience, call /api/docs/generate, show result.
- *
- * Props:
- * - repoId: string (required)
- * - defaultDocType?: "internal" | "external" (default "internal")
- * - defaultAudience?: "developers" | "users" | "managers" (default "developers")
- * - onBack?: () => void
- * - onDone?: (output?: { documentation?: string; location?: string }) => void
+ * Step 3: Pick doc_type + audience, call /api/docs/generate, show and edit result.
+ * Left: Editable Markdown
+ * Right: Live PDF preview (rendered Markdown)
  */
 export default function DocGenerator({
   repoId,
@@ -24,10 +22,11 @@ export default function DocGenerator({
   const [docType, setDocType] = useState(defaultDocType);
   const [audience, setAudience] = useState(defaultAudience);
   const [generating, setGenerating] = useState(false);
-  const [banner, setBanner] = useState(null); // {type, msg}
+  const [banner, setBanner] = useState(null);
   const [documentation, setDocumentation] = useState("");
   const [location, setLocation] = useState("");
 
+  // Generate documentation from API
   async function handleGenerate(e) {
     e.preventDefault();
     if (!repoId) {
@@ -55,6 +54,7 @@ export default function DocGenerator({
     }
   }
 
+  // Copy markdown to clipboard
   async function copyToClipboard() {
     try {
       await navigator.clipboard.writeText(documentation || "");
@@ -64,11 +64,28 @@ export default function DocGenerator({
     }
   }
 
+  // Export current markdown preview as PDF
+  function generatePdf() {
+    const element = document.getElementById("pdf-preview");
+    if (!element) return;
+    html2pdf()
+      .from(element)
+      .set({
+        margin: 10,
+        filename: "Echo-Documentation.pdf",
+        html2canvas: { scale: 1.5 },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      })
+      .save();
+  }
+
   return (
     <section className="space-y-6">
       <header>
         <h2 className="text-xl font-semibold">3. Generate Documentation</h2>
-        <p className="text-sm text-gray-600">Repo: <code className="text-gray-800">{repoId}</code></p>
+        <p className="text-sm text-gray-600">
+          Repo: <code className="text-gray-800">{repoId}</code>
+        </p>
       </header>
 
       {banner && (
@@ -85,13 +102,14 @@ export default function DocGenerator({
         </div>
       )}
 
+      {/* Step form for doc type and audience */}
       <form onSubmit={handleGenerate} className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium">Doc Type</label>
           <select
             value={docType}
             onChange={(e) => setDocType(e.target.value)}
-            className="mt-1 w-full rounded-lg border px-3 py-2"
+            className="select mt-1"
           >
             <option value="internal">internal</option>
             <option value="external">external</option>
@@ -103,7 +121,7 @@ export default function DocGenerator({
           <select
             value={audience}
             onChange={(e) => setAudience(e.target.value)}
-            className="mt-1 w-full rounded-lg border px-3 py-2"
+            className="select mt-1"
           >
             <option value="developers">developers</option>
             <option value="users">users</option>
@@ -115,7 +133,7 @@ export default function DocGenerator({
           <button
             type="submit"
             disabled={!repoId || generating}
-            className="rounded-lg bg-black text-white px-4 py-2 disabled:opacity-60"
+            className="btn-primary disabled:opacity-60"
           >
             {generating ? "Generating…" : "Generate"}
           </button>
@@ -123,7 +141,7 @@ export default function DocGenerator({
             <button
               type="button"
               onClick={onBack}
-              className="rounded-lg border px-4 py-2"
+              className="btn-secondary"
               disabled={generating}
             >
               Back
@@ -132,26 +150,50 @@ export default function DocGenerator({
         </div>
       </form>
 
+      {/* Markdown editor + Live PDF preview */}
       {(documentation || location) && (
-        <div className="space-y-3">
-          {location && (
-            <div className="text-sm text-gray-700">
-              Saved at: <code className="break-all">{location}</code>
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Editable Markdown Box */}
+          <div className="flex flex-col h-[70vh]">
+            <h3 className="text-sm font-semibold mb-2">Editable Markdown</h3>
+            <textarea
+              className="flex-1 input resize-none font-mono text-sm"
+              value={documentation}
+              onChange={(e) => setDocumentation(e.target.value)}
+            />
+            <div className="flex gap-2 mt-3">
+              <button
+                type="button"
+                onClick={copyToClipboard}
+                className="btn-secondary w-fit"
+              >
+                Copy Markdown
+              </button>
             </div>
-          )}
-          <div className="flex items-center gap-3">
-            <h3 className="text-sm font-medium">Output</h3>
+          </div>
+
+          {/* Live Markdown → PDF Preview */}
+          <div className="flex flex-col h-[70vh] overflow-hidden">
+            <h3 className="text-sm font-semibold mb-2">Live PDF Preview</h3>
+            <div
+              id="pdf-preview"
+              className="flex-1 overflow-auto bg-white border border-gray-300 rounded-lg p-4 shadow-inner text-black"
+            >
+              <div className="prose prose-sm max-w-none">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {documentation || ""}
+                </ReactMarkdown>
+              </div>
+
+            </div>
             <button
               type="button"
-              onClick={copyToClipboard}
-              className="rounded-lg border px-2 py-1 text-xs"
+              onClick={generatePdf}
+              className="btn-primary mt-3 w-fit"
             >
-              Copy
+              Download PDF
             </button>
           </div>
-          <pre className="whitespace-pre-wrap rounded-lg border bg-gray-50 p-4 text-sm max-h-[60vh] overflow-auto">
-            {documentation || "(no content returned)"}
-          </pre>
         </div>
       )}
     </section>
