@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import apiService from './services/apiService';
 
 export default function Home() {
@@ -14,12 +15,19 @@ export default function Home() {
   const [selectedRepo, setSelectedRepo] = useState(null);
   const [docType, setDocType] = useState('internal');
   const [audience, setAudience] = useState('developers');
+  const [docName, setDocName] = useState('My Documentation');
 
   // UI state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [connectionStatus, setConnectionStatus] = useState('checking'); // 'checking' | 'connected' | 'error'
+
+  // Preview state
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [generatedDoc, setGeneratedDoc] = useState('');
+
+  const router = useRouter();
 
   useEffect(() => {
     checkBackendConnection();
@@ -47,9 +55,7 @@ export default function Home() {
       const data = await apiService.getRepositories();
       const list = data?.repositories ?? [];
       setRepositories(list);
-      if (list.length > 0) {
-        setStep(2);
-      }
+      if (list.length > 0) setStep(2);
     } catch (err) {
       console.error('Failed to load repositories:', err);
       setError('Failed to load repositories.');
@@ -96,9 +102,12 @@ export default function Home() {
       const result = await apiService.generateDocumentation(selectedRepo, docType, audience);
 
       if (result.status === 'success') {
+        const doc = result.documentation || '';
+        setGeneratedDoc(doc);
         setSuccess(result.message || 'Documentation generated successfully!');
-        // You could show a preview modal here using result.documentation
-        console.log('Generated documentation:', result.documentation);
+        setPreviewOpen(true);
+        // Log for devtools as you had before
+        console.log('Generated documentation:', doc);
       } else {
         setError(result.error || 'Failed to generate documentation.');
       }
@@ -143,6 +152,43 @@ export default function Home() {
     );
   };
 
+  // Helpers for preview modal actions
+  const sanitizeFilename = (s) =>
+    s.replace(/[\/\\:*?"<>|]+/g, '-').replace(/\s+/g, '_').slice(0, 120);
+
+  const labelForType = (id) =>
+    id === 'internal'
+      ? 'Internal'
+      : id === 'external'
+      ? 'External'
+      : (id || 'Docs');
+
+  const handleDownloadMd = () => {
+    const blob = new Blob([generatedDoc || ''], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const base = sanitizeFilename(`${docName}__${labelForType(docType)}`);
+    a.href = url;
+    a.download = `${base}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const saveToLocalAndOpenStudio = () => {
+    // Persist into the same keying scheme used by the Docs Studio page.
+    // This lets the /docs editor immediately pick up the draft by name+type.
+    const storageKey = `echo-docs:${docType}:${docName}`;
+    localStorage.setItem(storageKey, generatedDoc || '');
+
+    // Also keep a small breadcrumb for the editor to highlight this draft if desired
+    localStorage.setItem(
+      'echo-docs:last-opened',
+      JSON.stringify({ name: docName, type: docType, ts: Date.now() })
+    );
+
+    router.push('/docs');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100">
       {/* Top Bar */}
@@ -172,7 +218,7 @@ export default function Home() {
 
         {/* Stepper */}
         <ol className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {steps.map(({ id, label }, idx) => {
+          {steps.map(({ id, label }) => {
             const isActive = id === step;
             const isDone = id < step;
             return (
@@ -438,6 +484,20 @@ export default function Home() {
                   </select>
                 </div>
 
+                <div>
+                  <label className="mb-2 block text-sm text-slate-300">Document Name</label>
+                  <input
+                    type="text"
+                    value={docName}
+                    onChange={(e) => setDocName(e.target.value)}
+                    placeholder="e.g., Echo — User Manual"
+                    className="w-full rounded-lg border border-white/10 bg-slate-950 px-4 py-3 text-slate-100 outline-none focus:border-sky-500/60 focus:ring-2 focus:ring-sky-500/20"
+                  />
+                  <p className="mt-2 text-xs text-slate-500">
+                    Used for local saving and to label your draft in Docs Studio.
+                  </p>
+                </div>
+
                 {selectedRepo && (
                   <div className="rounded-lg border border-white/10 bg-slate-950 p-4">
                     <p className="text-xs text-slate-400">Selected Repository</p>
@@ -496,6 +556,63 @@ export default function Home() {
           Echo • Built with ❤️ by Randish • Powered by C++ &amp; Next.js
         </div>
       </div>
+
+      {/* Preview Modal */}
+      {previewOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setPreviewOpen(false)}
+          />
+          <div className="relative z-10 w-full max-w-4xl rounded-2xl border border-white/10 bg-slate-950 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+              <div className="min-w-0 pr-3">
+                <p className="truncate text-sm text-slate-400">
+                  Preview — {labelForType(docType)} • {audience}
+                </p>
+                <h3 className="truncate text-lg font-semibold">{docName}</h3>
+              </div>
+              <button
+                onClick={() => setPreviewOpen(false)}
+                className="rounded-lg px-3 py-1.5 text-slate-300 hover:bg-white/5"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="grid max-h-[70vh] grid-cols-1 gap-0 overflow-hidden p-0 sm:grid-cols-1">
+              <textarea
+                value={generatedDoc}
+                onChange={(e) => setGeneratedDoc(e.target.value)}
+                className="h-[60vh] w-full resize-none rounded-b-2xl bg-slate-950 p-4 font-mono text-sm leading-6 text-slate-100 outline-none"
+                spellCheck={false}
+              />
+            </div>
+
+            <div className="flex flex-col-reverse gap-3 border-t border-white/10 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-xs text-slate-500">
+                Tip: Click <span className="text-slate-300">Edit in Docs Studio</span> to continue
+                in the split view editor with PDF preview.
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={handleDownloadMd}
+                  className="rounded-lg border border-white/10 bg-slate-800 px-4 py-2 text-sm hover:bg-slate-700"
+                >
+                  Save .md
+                </button>
+                <button
+                  onClick={saveToLocalAndOpenStudio}
+                  className="rounded-lg bg-gradient-to-r from-blue-600 to-fuchsia-600 px-4 py-2 text-sm font-semibold text-white shadow hover:from-blue-500 hover:to-fuchsia-500"
+                >
+                  Edit in Docs Studio →
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
