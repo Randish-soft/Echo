@@ -19,7 +19,9 @@ const isBrowser = typeof window !== "undefined";
 const BASE =
   (isBrowser && window.__ECHO_API__) ||
   process.env.NEXT_PUBLIC_API_BASE ||
-  "http://localhost:8000";
+  // In Docker, talk to backend service name
+  "http://echo_backend:8000";
+
 
 const DEFAULT_TIMEOUT = 15000;
 

@@ -6,10 +6,12 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: echo_db
-    ports: ["5432:5432"]
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks: [echo_network]
+    networks:
+      - echo_network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres || exit 1"]
       interval: 10s
@@ -21,21 +23,23 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile   # <— capital D (your C++ Crow image)
+      dockerfile: Dockerfile   # capital D — correct
     container_name: echo_backend
     environment:
       GITHUB_TOKEN: ${GITHUB_TOKEN}
       REPOS_PATH: /app/data/repositories
       SUMMARIES_PATH: /app/data/summaries
       DATABASE_URL: postgresql://postgres:password@db:5432/echo_db
-    ports: ["8000:8000"]
+    ports:
+      - "8000:8000"
     volumes:
       - backend_repos:/app/data/repositories
       - backend_summaries:/app/data/summaries
     depends_on:
       db:
         condition: service_healthy
-    networks: [echo_network]
+    networks:
+      - echo_network
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8000/api/health > /dev/null || exit 1"]
       interval: 5s
@@ -50,12 +54,17 @@ services:
       dockerfile: Dockerfile
     container_name: echo_frontend
     environment:
+      NODE_ENV: development
       NEXT_TELEMETRY_DISABLED: "1"
       CHOKIDAR_USEPOLLING: "1"
       WATCHPACK_POLLING: "1"
-      NODE_ENV: development
-      NEXT_PUBLIC_API_BASE: "http://backend:8000/api"
-    ports: ["3000:3000"]
+
+      # 👇 This is the key fix:
+      # Browser fetches from localhost:8000 (host machine), not the Docker network.
+      NEXT_PUBLIC_API_BASE: "http://localhost:8000"
+
+    ports:
+      - "3000:3000"
     volumes:
       - ./frontend:/app
       - /app/node_modules
@@ -64,7 +73,8 @@ services:
     depends_on:
       backend:
         condition: service_healthy
-    networks: [echo_network]
+    networks:
+      - echo_network
     restart: unless-stopped
 
 networks:
