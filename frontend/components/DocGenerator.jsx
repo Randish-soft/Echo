@@ -14,7 +14,10 @@ export default function DocGenerator({ selectedRepo, onDocumentGenerated, onBack
     const [pdfUrl, setPdfUrl] = useState("");
     const [message, setMessage] = useState({ type: "", text: "" });
     const [grammarAnalysis, setGrammarAnalysis] = useState(null);
-    const [showGrammarPanel, setShowGrammarPanel] = useState(false);
+    const [showGrammarPanel, setShowGrammarPanel] = useState(true);
+    const [selectedIssue, setSelectedIssue] = useState(null);
+    const [textSelection, setTextSelection] = useState(null);
+    const textareaRef = useRef(null);
     const iframeRef = useRef(null);
 
     // Update edited document when generated doc changes
@@ -39,9 +42,21 @@ export default function DocGenerator({ selectedRepo, onDocumentGenerated, onBack
         }
     }, [editedDoc, isEditing]);
 
+    // Handle text selection for context-aware suggestions
+    const handleTextSelection = () => {
+        if (textareaRef.current) {
+            const start = textareaRef.current.selectionStart;
+            const end = textareaRef.current.selectionEnd;
+            if (start !== end) {
+                setTextSelection({ start, end });
+            } else {
+                setTextSelection(null);
+            }
+        }
+    };
+
     const generatePdfPreview = async () => {
         try {
-            // Simple HTML preview for now
             const htmlContent = `
                 <!DOCTYPE html>
                 <html>
@@ -91,19 +106,6 @@ export default function DocGenerator({ selectedRepo, onDocumentGenerated, onBack
                                 padding-left: 20px;
                                 color: #666;
                                 font-style: italic;
-                            }
-                            table {
-                                border-collapse: collapse;
-                                width: 100%;
-                                margin: 20px 0;
-                            }
-                            th, td {
-                                border: 1px solid #ddd;
-                                padding: 8px 12px;
-                                text-align: left;
-                            }
-                            th {
-                                background: #f8f9fa;
                             }
                             @media print {
                                 body { margin: 0; }
@@ -155,10 +157,7 @@ export default function DocGenerator({ selectedRepo, onDocumentGenerated, onBack
         setGrammarAnalysis(null);
 
         try {
-            console.log("🔄 Generating documentation for:", selectedRepo);
             const result = await apiService.generateDocumentation(selectedRepo, docType, audience);
-            console.log("✅ Documentation generated:", result);
-            
             setGeneratedDoc(result.documentation || "No documentation generated.");
             setMessage({ type: "success", text: "Documentation generated successfully!" });
             
@@ -166,7 +165,6 @@ export default function DocGenerator({ selectedRepo, onDocumentGenerated, onBack
                 onDocumentGenerated(result);
             }
         } catch (error) {
-            console.error("❌ Documentation generation failed:", error);
             setMessage({ 
                 type: "error", 
                 text: error.message || "Failed to generate documentation" 
@@ -177,7 +175,6 @@ export default function DocGenerator({ selectedRepo, onDocumentGenerated, onBack
     };
 
     const handleSaveEdits = () => {
-        console.log("Saving edited document:", editedDoc);
         setMessage({ type: "success", text: "Document saved successfully!" });
         setIsEditing(false);
     };
@@ -193,9 +190,48 @@ export default function DocGenerator({ selectedRepo, onDocumentGenerated, onBack
 
     const handleAutoCorrect = () => {
         if (editedDoc) {
-            const corrected = grammarService.autoCorrect(editedDoc);
-            setEditedDoc(corrected);
-            setMessage({ type: "success", text: "Auto-correction applied!" });
+            const result = grammarService.autoCorrect(editedDoc, grammarAnalysis?.issues || []);
+            setEditedDoc(result.text);
+            setMessage({ 
+                type: "success", 
+                text: `Auto-corrected ${result.corrections.length} issues!` 
+            });
+        }
+    };
+
+    const handleIgnoreIssue = (issue) => {
+        grammarService.ignoreIssue(editedDoc, issue);
+        setSelectedIssue(null);
+        // Re-analyze to update the issues list
+        const newAnalysis = grammarService.analyzeText(editedDoc);
+        setGrammarAnalysis(newAnalysis);
+    };
+
+    const handleApplySuggestion = (issue, suggestion) => {
+        if (issue.correction) {
+            const newText = editedDoc.substring(0, issue.startIndex) + 
+                           issue.correction + 
+                           editedDoc.substring(issue.endIndex);
+            setEditedDoc(newText);
+            setSelectedIssue(null);
+        }
+    };
+
+    const getSeverityColor = (severity) => {
+        switch (severity) {
+            case "high": return "text-red-500";
+            case "medium": return "text-yellow-500";
+            case "low": return "text-blue-500";
+            default: return "text-gray-500";
+        }
+    };
+
+    const getSeverityBgColor = (severity) => {
+        switch (severity) {
+            case "high": return "bg-red-500/20 border-red-500/30";
+            case "medium": return "bg-yellow-500/20 border-yellow-500/30";
+            case "low": return "bg-blue-500/20 border-blue-500/30";
+            default: return "bg-gray-500/20 border-gray-500/30";
         }
     };
 
@@ -289,7 +325,11 @@ export default function DocGenerator({ selectedRepo, onDocumentGenerated, onBack
                                     </button>
                                     <button
                                         onClick={() => setShowGrammarPanel(!showGrammarPanel)}
-                                        className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm transition-colors"
+                                        className={`px-3 py-1 rounded text-sm transition-colors ${
+                                            showGrammarPanel 
+                                                ? "bg-indigo-700 text-white" 
+                                                : "bg-indigo-600 hover:bg-indigo-700 text-white"
+                                        }`}
                                     >
                                         Grammar
                                     </button>
@@ -304,14 +344,34 @@ export default function DocGenerator({ selectedRepo, onDocumentGenerated, onBack
                         </div>
                     </div>
                     
-                    <div className="flex-1 p-4 overflow-hidden">
+                    <div className="flex-1 p-4 overflow-hidden relative">
                         {isEditing ? (
-                            <textarea
-                                value={editedDoc}
-                                onChange={(e) => setEditedDoc(e.target.value)}
-                                className="w-full h-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Start editing your documentation here..."
-                            />
+                            <>
+                                <textarea
+                                    ref={textareaRef}
+                                    value={editedDoc}
+                                    onChange={(e) => setEditedDoc(e.target.value)}
+                                    onSelect={handleTextSelection}
+                                    className="w-full h-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Start editing your documentation here..."
+                                />
+                                
+                                {/* Issue highlighting overlay */}
+                                {grammarAnalysis && grammarAnalysis.issues.map((issue, index) => (
+                                    <div
+                                        key={index}
+                                        className={`absolute border-b-2 ${getSeverityBgColor(issue.severity)} cursor-pointer`}
+                                        style={{
+                                            top: `${(issue.startIndex / editedDoc.length) * 100}%`,
+                                            left: '1rem',
+                                            right: '1rem',
+                                            height: '2px'
+                                        }}
+                                        onClick={() => setSelectedIssue(issue)}
+                                        title={`${issue.type}: ${issue.suggestion}`}
+                                    />
+                                ))}
+                            </>
                         ) : (
                             <div className="w-full h-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white font-mono text-sm whitespace-pre-wrap overflow-auto">
                                 {editedDoc || "Generate documentation to see the content here..."}
@@ -320,11 +380,11 @@ export default function DocGenerator({ selectedRepo, onDocumentGenerated, onBack
                     </div>
                 </div>
 
-                {/* Grammar Panel - Middle (Conditional) */}
-                {showGrammarPanel && isEditing && (
-                    <div className="w-80 flex flex-col border-r border-slate-700 bg-slate-800">
+                {/* Grammar Panel - Middle */}
+                {showGrammarPanel && (
+                    <div className="w-96 flex flex-col border-r border-slate-700 bg-slate-800">
                         <div className="flex items-center justify-between p-4 border-b border-slate-700">
-                            <h2 className="text-lg font-semibold text-white">Grammar Check</h2>
+                            <h2 className="text-lg font-semibold text-white">Editor Assistant</h2>
                             <button
                                 onClick={() => setShowGrammarPanel(false)}
                                 className="text-slate-400 hover:text-white"
@@ -333,70 +393,125 @@ export default function DocGenerator({ selectedRepo, onDocumentGenerated, onBack
                             </button>
                         </div>
                         
-                        <div className="flex-1 p-4 overflow-auto">
-                            {grammarAnalysis ? (
-                                <div className="space-y-4">
-                                    {/* Grammar Score */}
-                                    <div className="text-center p-4 bg-slate-700 rounded-lg">
-                                        <div className="text-2xl font-bold">
-                                            <span className={getGrammarScoreColor(grammarAnalysis.score)}>
-                                                {grammarAnalysis.score}/100
-                                            </span>
+                        <div className="flex-1 flex flex-col overflow-hidden">
+                            {/* Grammar Score & Metrics */}
+                            <div className="p-4 border-b border-slate-700">
+                                {grammarAnalysis ? (
+                                    <div className="space-y-3">
+                                        <div className="text-center">
+                                            <div className="text-2xl font-bold">
+                                                <span className={getGrammarScoreColor(grammarAnalysis.score)}>
+                                                    {grammarAnalysis.score}/100
+                                                </span>
+                                            </div>
+                                            <div className="text-sm text-slate-300">Writing Quality</div>
                                         </div>
-                                        <div className="text-sm text-slate-300 mt-1">
-                                            Writing Quality
-                                        </div>
-                                    </div>
 
-                                    {/* Statistics */}
-                                    <div className="grid grid-cols-2 gap-2 text-sm">
-                                        <div className="bg-slate-700 p-2 rounded text-center">
-                                            <div className="font-semibold">{grammarAnalysis.wordCount}</div>
-                                            <div className="text-slate-400 text-xs">Words</div>
-                                        </div>
-                                        <div className="bg-slate-700 p-2 rounded text-center">
-                                            <div className="font-semibold">{grammarAnalysis.sentenceCount}</div>
-                                            <div className="text-slate-400 text-xs">Sentences</div>
-                                        </div>
-                                    </div>
-
-                                    {/* Suggestions */}
-                                    {grammarAnalysis.suggestions.length > 0 && (
-                                        <div>
-                                            <h3 className="font-semibold text-slate-200 mb-2">Suggestions</h3>
-                                            <div className="space-y-2">
-                                                {grammarAnalysis.suggestions.map((suggestion, index) => (
-                                                    <div key={index} className="bg-yellow-500/10 border border-yellow-500/20 rounded p-2 text-sm">
-                                                        💡 {suggestion}
-                                                    </div>
-                                                ))}
+                                        <div className="grid grid-cols-2 gap-2 text-xs">
+                                            <div className="bg-slate-700 p-2 rounded text-center">
+                                                <div className="font-semibold">{grammarAnalysis.metrics?.wordCount}</div>
+                                                <div className="text-slate-400">Words</div>
+                                            </div>
+                                            <div className="bg-slate-700 p-2 rounded text-center">
+                                                <div className="font-semibold">{grammarAnalysis.metrics?.characterCount}</div>
+                                                <div className="text-slate-400">Characters</div>
+                                            </div>
+                                            <div className="bg-slate-700 p-2 rounded text-center">
+                                                <div className="font-semibold">{grammarAnalysis.metrics?.sentenceCount}</div>
+                                                <div className="text-slate-400">Sentences</div>
+                                            </div>
+                                            <div className="bg-slate-700 p-2 rounded text-center">
+                                                <div className="font-semibold">{grammarAnalysis.metrics?.readingTime}m</div>
+                                                <div className="text-slate-400">Read Time</div>
                                             </div>
                                         </div>
-                                    )}
+                                    </div>
+                                ) : (
+                                    <div className="text-center text-slate-400 py-2">
+                                        Start typing to see analysis...
+                                    </div>
+                                )}
+                            </div>
 
-                                    {/* Issues */}
-                                    {grammarAnalysis.issues.length > 0 && (
-                                        <div>
-                                            <h3 className="font-semibold text-slate-200 mb-2">Issues Found</h3>
-                                            <div className="space-y-2">
-                                                {grammarAnalysis.issues.map((issue, index) => (
-                                                    <div key={index} className="bg-red-500/10 border border-red-500/20 rounded p-2 text-sm">
-                                                        ⚠️ {issue.type} ({issue.count})
+                            {/* Issues List */}
+                            <div className="flex-1 overflow-auto">
+                                <div className="p-4">
+                                    <h3 className="font-semibold text-slate-200 mb-3">
+                                        Issues ({grammarAnalysis?.issues?.length || 0})
+                                    </h3>
+                                    
+                                    {grammarAnalysis?.issues?.length > 0 ? (
+                                        <div className="space-y-2">
+                                            {grammarAnalysis.issues.map((issue, index) => (
+                                                <div
+                                                    key={index}
+                                                    className={`p-3 rounded border cursor-pointer transition-colors ${
+                                                        selectedIssue === issue 
+                                                            ? "bg-slate-600 border-slate-400" 
+                                                            : getSeverityBgColor(issue.severity)
+                                                    }`}
+                                                    onClick={() => setSelectedIssue(issue)}
+                                                >
+                                                    <div className="flex items-start justify-between">
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <div className={`w-2 h-2 rounded-full ${getSeverityColor(issue.severity).replace('text-', 'bg-')}`}></div>
+                                                                <span className="text-sm font-medium capitalize">{issue.type}</span>
+                                                                <span className="text-xs text-slate-400 capitalize">({issue.category})</span>
+                                                            </div>
+                                                            <div className="text-sm text-slate-300">{issue.suggestion}</div>
+                                                            <div className="text-xs text-slate-400 mt-1 font-mono bg-slate-700 px-2 py-1 rounded">
+                                                                "{issue.text}"
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                ))}
-                                            </div>
+                                                </div>
+                                            ))}
                                         </div>
-                                    )}
-
-                                    {grammarAnalysis.issues.length === 0 && grammarAnalysis.suggestions.length === 0 && (
-                                        <div className="text-center text-slate-400 py-4">
-                                            ✅ Great! No issues found.
+                                    ) : (
+                                        <div className="text-center text-slate-400 py-8">
+                                            ✅ No issues found
                                         </div>
                                     )}
                                 </div>
-                            ) : (
-                                <div className="text-center text-slate-400 py-8">
-                                    Start typing to see grammar analysis...
+                            </div>
+
+                            {/* Selected Issue Details */}
+                            {selectedIssue && (
+                                <div className="p-4 border-t border-slate-700 bg-slate-750">
+                                    <h4 className="font-semibold text-slate-200 mb-3">Selected Issue</h4>
+                                    <div className="space-y-3">
+                                        <div>
+                                            <div className="text-sm text-slate-400">Type</div>
+                                            <div className="text-sm font-medium capitalize">{selectedIssue.type}</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-sm text-slate-400">Suggestion</div>
+                                            <div className="text-sm">{selectedIssue.suggestion}</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-sm text-slate-400">Text</div>
+                                            <div className="text-sm font-mono bg-slate-700 p-2 rounded">
+                                                "{selectedIssue.text}"
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2 pt-2">
+                                            {selectedIssue.correction && (
+                                                <button
+                                                    onClick={() => handleApplySuggestion(selectedIssue, selectedIssue.correction)}
+                                                    className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded text-sm transition-colors"
+                                                >
+                                                    Change to "{selectedIssue.correction}"
+                                                </button>
+                                            )}
+                                            <button
+                                                onClick={() => handleIgnoreIssue(selectedIssue)}
+                                                className="flex-1 bg-slate-600 hover:bg-slate-700 text-white py-2 px-3 rounded text-sm transition-colors"
+                                            >
+                                                Ignore
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
                         </div>
