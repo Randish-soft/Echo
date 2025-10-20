@@ -11,8 +11,10 @@
 #include <regex>
 #include <algorithm>
 #include <iostream>
+#include <memory>
 #include <nlohmann/json.hpp>
 #include "GitHubService.h"
+#include "CodeAnalyzer.h"
 
 namespace fs = std::filesystem;
 using json = nlohmann::json;
@@ -20,7 +22,22 @@ using json = nlohmann::json;
 class ScannerService {
 private:
     std::string summaries_path;
+    std::string repos_path;
+    std::unique_ptr<CodeAnalyzer> code_analyzer_;
     
+    // Enhanced logging
+    void logInfo(const std::string& message) {
+        std::cout << "🔍 [ScannerService] " << message << std::endl;
+    }
+    
+    void logError(const std::string& context, const std::exception& e) {
+        std::cerr << "❌ [ScannerService] Error in " << context << ": " << e.what() << std::endl;
+    }
+    
+    void logWarning(const std::string& message) {
+        std::cout << "⚠️ [ScannerService] " << message << std::endl;
+    }
+
     // Supported code file extensions
     std::set<std::string> code_extensions = {
         ".py", ".js", ".ts", ".jsx", ".tsx", ".java", ".cpp", ".c", ".h", ".hpp",
@@ -280,126 +297,368 @@ private:
         return result;
     }
 
-public:
-    ScannerService() {
-        const char* summaries = std::getenv("SUMMARIES_PATH");
-        summaries_path = summaries ? summaries : "./data/summaries";
-        fs::create_directories(summaries_path);
-        std::cout << "✓ Summaries storage path: " << summaries_path << std::endl;
+    // Save analysis results to file with error handling
+    void saveAnalysisResults(const std::string& repo_id, const json& analysis) {
+        try {
+            std::string summary_file = summaries_path + "/" + repo_id + ".json";
+            
+            std::ofstream file(summary_file);
+            if (!file.is_open()) {
+                throw std::runtime_error("Failed to open file for writing: " + summary_file);
+            }
+            
+            file << analysis.dump(2); // Pretty print
+            file.close();
+            
+            logInfo("Analysis results saved to: " + summary_file);
+            
+        } catch (const std::exception& e) {
+            logError("saveAnalysisResults", e);
+            throw std::runtime_error("Failed to save analysis results for " + repo_id);
+        }
     }
 
-    // Scan an entire repository
-    json scanRepository(const std::string& repo_path) {
-        GitHubService github_service;
-        auto gitignore_patterns = github_service.getGitignorePatterns(repo_path);
-        
-        json scan_results;
-        json file_summaries;
-        int total_files = 0;
-        
-        std::cout << "\n🔍 Scanning repository: " << repo_path << "\n" << std::endl;
-        
-        // Recursively iterate through all files
-        for (const auto& entry : fs::recursive_directory_iterator(repo_path)) {
-            if (!entry.is_regular_file()) continue;
+    // Check if repository needs re-scanning
+    bool needsRescan(const std::string& repo_id) {
+        try {
+            std::string summary_file = summaries_path + "/" + repo_id + ".json";
+            std::string repo_dir = repos_path + "/" + repo_id;
             
-            std::string file_path = entry.path().string();
-            std::string relative_path = fs::relative(file_path, repo_path).string();
-            
-            // Skip files matching gitignore patterns
-            if (shouldSkipFile(file_path, gitignore_patterns)) continue;
-            
-            std::string ext = entry.path().extension().string();
-            
-            // Skip non-code files
-            if (code_extensions.find(ext) == code_extensions.end()) continue;
-            
-            total_files++;
-            
-            try {
-                // Read file content
-                std::ifstream file(file_path);
-                std::stringstream buffer;
-                buffer << file.rdbuf();
-                std::string content = buffer.str();
-                file.close();
-                
-                // Analyze based on file type
-                json analysis;
-                if (ext == ".py") {
-                    analysis = analyzePythonFile(file_path, content);
-                } else if (ext == ".js" || ext == ".jsx" || ext == ".ts" || ext == ".tsx") {
-                    analysis = analyzeJavaScriptFile(content);
-                } else {
-                    analysis["type"] = "other";
-                    analysis["lines"] = std::count(content.begin(), content.end(), '\n') + 1;
-                }
-                
-                // Generate summary
-                std::string summary = generateFileSummary(file_path, analysis);
-                
-                // Store file information
-                json file_info;
-                file_info["path"] = relative_path;
-                file_info["extension"] = ext;
-                file_info["analysis"] = analysis;
-                file_info["summary"] = summary;
-                
-                file_summaries[relative_path] = file_info;
-                
-                std::cout << "✓ Analyzed: " << relative_path << std::endl;
-                
-            } catch (const std::exception& e) {
-                std::cerr << "✗ Error scanning " << relative_path << ": " << e.what() << std::endl;
+            if (!fs::exists(summary_file)) {
+                logInfo("No existing analysis found, scan required for: " + repo_id);
+                return true;
             }
+            
+            if (!fs::exists(repo_dir)) {
+                logWarning("Repository directory missing but analysis exists: " + repo_id);
+                return true;
+            }
+            
+            // Check if repository has been modified since last analysis
+            auto analysis_time = fs::last_write_time(summary_file);
+            auto repo_time = fs::last_write_time(repo_dir);
+            
+            if (repo_time > analysis_time) {
+                logInfo("Repository modified since last analysis, rescan required: " + repo_id);
+                return true;
+            }
+            
+            logInfo("Using cached analysis for: " + repo_id);
+            return false;
+            
+        } catch (const std::exception& e) {
+            logError("needsRescan", e);
+            return true; // Default to rescan on error
         }
-        
-        // Prepare final results
-        scan_results["repo_path"] = repo_path;
-        scan_results["total_files"] = total_files;
-        scan_results["analyzed_files"] = file_summaries.size();
-        scan_results["files"] = file_summaries;
-        
-        // Save to file
-        std::string repo_id = fs::path(repo_path).filename().string();
-        std::string summary_file = summaries_path + "/" + repo_id + ".json";
-        
-        std::ofstream out(summary_file);
-        out << scan_results.dump(2);
-        out.close();
-        
-        std::cout << "\n✅ Scan complete! Analyzed " << file_summaries.size() << " files" << std::endl;
-        std::cout << "📁 Results saved to: " << summary_file << "\n" << std::endl;
-        
-        return scan_results;
+    }
+
+    // Enhanced scan using CodeAnalyzer for comprehensive analysis
+    json enhancedScanRepository(const std::string& repo_path) {
+        try {
+            logInfo("Starting enhanced scan for: " + repo_path);
+            
+            // Use CodeAnalyzer for comprehensive analysis
+            auto comprehensive_analysis = code_analyzer_->analyzeRepository(fs::path(repo_path).filename().string());
+            
+            // Convert to compatible format with existing system
+            json scan_results;
+            scan_results["repo_path"] = repo_path;
+            scan_results["total_files"] = comprehensive_analysis["analysis"].value("total_files", 0);
+            scan_results["analyzed_files"] = comprehensive_analysis["analysis"].value("total_files", 0);
+            
+            json file_summaries;
+            
+            if (comprehensive_analysis.contains("files")) {
+                for (const auto& [file_path, file_info] : comprehensive_analysis["files"].items()) {
+                    json enhanced_file_info;
+                    enhanced_file_info["path"] = file_path;
+                    enhanced_file_info["extension"] = fs::path(file_path).extension().string();
+                    enhanced_file_info["analysis"] = file_info;
+                    
+                    // Generate summary using enhanced analysis
+                    std::stringstream summary;
+                    summary << "Purpose: " << file_info.value("purpose", "Unknown");
+                    summary << " | Language: " << file_info.value("language", "Unknown");
+                    summary << " | Lines: " << file_info.value("line_count", 0);
+                    summary << " | Complexity: " << file_info.value("complexity_score", 0);
+                    
+                    if (file_info.contains("functions") && !file_info["functions"].empty()) {
+                        summary << " | Functions: " << file_info["functions"].size();
+                    }
+                    
+                    if (file_info.contains("classes") && !file_info["classes"].empty()) {
+                        summary << " | Classes: " << file_info["classes"].size();
+                    }
+                    
+                    enhanced_file_info["summary"] = summary.str();
+                    file_summaries[file_path] = enhanced_file_info;
+                }
+            }
+            
+            scan_results["files"] = file_summaries;
+            scan_results["enhanced_analysis"] = comprehensive_analysis["analysis"];
+            
+            logInfo("Enhanced scan completed for: " + repo_path);
+            return scan_results;
+            
+        } catch (const std::exception& e) {
+            logError("enhancedScanRepository", e);
+            logWarning("Falling back to basic scan due to enhanced scan failure");
+            return scanRepository(repo_path); // Fallback to original method
+        }
+    }
+
+public:
+    ScannerService() {
+        try {
+            const char* summaries = std::getenv("SUMMARIES_PATH");
+            const char* repos = std::getenv("REPOS_PATH");
+            
+            summaries_path = summaries ? summaries : "/app/data/summaries";
+            repos_path = repos ? repos : "/app/data/repositories";
+            
+            // Create directories if they don't exist
+            if (!fs::exists(summaries_path)) {
+                fs::create_directories(summaries_path);
+                logInfo("Created summaries directory: " + summaries_path);
+            }
+            
+            if (!fs::exists(repos_path)) {
+                fs::create_directories(repos_path);
+                logInfo("Created repositories directory: " + repos_path);
+            }
+            
+            // Initialize CodeAnalyzer
+            code_analyzer_ = std::make_unique<CodeAnalyzer>(repos_path);
+            
+            logInfo("ScannerService initialized successfully");
+            logInfo("Summaries path: " + summaries_path);
+            logInfo("Repositories path: " + repos_path);
+            
+        } catch (const std::exception& e) {
+            logError("Constructor", e);
+            throw;
+        }
+    }
+
+    // Enhanced scan repository with comprehensive analysis
+    json scanRepository(const std::string& repo_path) {
+        try {
+            logInfo("Starting repository scan: " + repo_path);
+            
+            if (!fs::exists(repo_path)) {
+                throw std::runtime_error("Repository path does not exist: " + repo_path);
+            }
+            
+            std::string repo_id = fs::path(repo_path).filename().string();
+            
+            // Check if we can use cached results
+            if (!needsRescan(repo_id)) {
+                logInfo("Using cached analysis for: " + repo_id);
+                return getRepositorySummary(repo_id);
+            }
+            
+            // Try enhanced scan first, fallback to basic scan if needed
+            json scan_results;
+            try {
+                scan_results = enhancedScanRepository(repo_path);
+            } catch (const std::exception& e) {
+                logWarning("Enhanced scan failed, falling back to basic scan: " + std::string(e.what()));
+                scan_results = basicScanRepository(repo_path);
+            }
+            
+            // Save results
+            saveAnalysisResults(repo_id, scan_results);
+            
+            logInfo("Scan completed successfully for: " + repo_id);
+            logInfo("Total files analyzed: " + std::to_string(scan_results.value("analyzed_files", 0)));
+            
+            return scan_results;
+            
+        } catch (const std::exception& e) {
+            logError("scanRepository", e);
+            throw std::runtime_error("Repository scan failed: " + std::string(e.what()));
+        }
+    }
+
+    // Original basic scan method (preserved for compatibility)
+    json basicScanRepository(const std::string& repo_path) {
+        try {
+            logInfo("Starting basic scan: " + repo_path);
+            
+            GitHubService github_service;
+            auto gitignore_patterns = github_service.getGitignorePatterns(repo_path);
+            
+            json scan_results;
+            json file_summaries;
+            int total_files = 0;
+            
+            // Recursively iterate through all files
+            for (const auto& entry : fs::recursive_directory_iterator(repo_path)) {
+                if (!entry.is_regular_file()) continue;
+                
+                std::string file_path = entry.path().string();
+                std::string relative_path = fs::relative(file_path, repo_path).string();
+                
+                // Skip files matching gitignore patterns
+                if (shouldSkipFile(file_path, gitignore_patterns)) continue;
+                
+                std::string ext = entry.path().extension().string();
+                
+                // Skip non-code files
+                if (code_extensions.find(ext) == code_extensions.end()) continue;
+                
+                total_files++;
+                
+                try {
+                    // Read file content
+                    std::ifstream file(file_path);
+                    std::stringstream buffer;
+                    buffer << file.rdbuf();
+                    std::string content = buffer.str();
+                    file.close();
+                    
+                    // Analyze based on file type
+                    json analysis;
+                    if (ext == ".py") {
+                        analysis = analyzePythonFile(file_path, content);
+                    } else if (ext == ".js" || ext == ".jsx" || ext == ".ts" || ext == ".tsx") {
+                        analysis = analyzeJavaScriptFile(content);
+                    } else {
+                        analysis["type"] = "other";
+                        analysis["lines"] = std::count(content.begin(), content.end(), '\n') + 1;
+                    }
+                    
+                    // Generate summary
+                    std::string summary = generateFileSummary(file_path, analysis);
+                    
+                    // Store file information
+                    json file_info;
+                    file_info["path"] = relative_path;
+                    file_info["extension"] = ext;
+                    file_info["analysis"] = analysis;
+                    file_info["summary"] = summary;
+                    
+                    file_summaries[relative_path] = file_info;
+                    
+                    logInfo("✓ Analyzed: " + relative_path);
+                    
+                } catch (const std::exception& e) {
+                    logError("basicScanRepository file analysis", e);
+                }
+            }
+            
+            // Prepare final results
+            scan_results["repo_path"] = repo_path;
+            scan_results["total_files"] = total_files;
+            scan_results["analyzed_files"] = file_summaries.size();
+            scan_results["files"] = file_summaries;
+            
+            logInfo("Basic scan completed. Analyzed " + std::to_string(file_summaries.size()) + " files");
+            
+            return scan_results;
+            
+        } catch (const std::exception& e) {
+            logError("basicScanRepository", e);
+            throw;
+        }
     }
 
     // Get saved repository summary
     json getRepositorySummary(const std::string& repo_id) {
-        std::string summary_file = summaries_path + "/" + repo_id + ".json";
-        
-        if (!fs::exists(summary_file)) {
-            throw std::runtime_error("Summary not found for repo: " + repo_id);
+        try {
+            std::string summary_file = summaries_path + "/" + repo_id + ".json";
+            
+            if (!fs::exists(summary_file)) {
+                throw std::runtime_error("Summary not found for repo: " + repo_id);
+            }
+            
+            std::ifstream file(summary_file);
+            if (!file.is_open()) {
+                throw std::runtime_error("Failed to open summary file: " + summary_file);
+            }
+            
+            json summary;
+            file >> summary;
+            
+            logInfo("Loaded repository summary for: " + repo_id);
+            return summary;
+            
+        } catch (const std::exception& e) {
+            logError("getRepositorySummary", e);
+            throw;
         }
-        
-        std::ifstream file(summary_file);
-        json summary;
-        file >> summary;
-        return summary;
     }
 
     // List all scanned repositories
     json listRepositories() {
-        json repos = json::array();
-        
-        for (const auto& entry : fs::directory_iterator(summaries_path)) {
-            if (entry.path().extension() == ".json") {
-                std::string repo_id = entry.path().stem().string();
-                repos.push_back(repo_id);
+        try {
+            json repos = json::array();
+            int count = 0;
+            
+            for (const auto& entry : fs::directory_iterator(summaries_path)) {
+                if (entry.path().extension() == ".json") {
+                    std::string repo_id = entry.path().stem().string();
+                    repos.push_back(repo_id);
+                    count++;
+                }
             }
+            
+            logInfo("Listed " + std::to_string(count) + " repositories");
+            return repos;
+            
+        } catch (const std::exception& e) {
+            logError("listRepositories", e);
+            throw;
         }
-        
-        return repos;
+    }
+
+    // New method: Analyze repository architecture
+    json analyzeArchitecture(const std::string& repo_id) {
+        try {
+            logInfo("Starting architecture analysis for: " + repo_id);
+            
+            auto analysis = code_analyzer_->analyzeArchitecture(repo_id);
+            logInfo("Architecture analysis completed for: " + repo_id);
+            
+            return analysis;
+            
+        } catch (const std::exception& e) {
+            logError("analyzeArchitecture", e);
+            throw;
+        }
+    }
+
+    // New method: Analyze APIs in repository
+    json analyzeAPIs(const std::string& repo_id) {
+        try {
+            logInfo("Starting API analysis for: " + repo_id);
+            
+            auto analysis = code_analyzer_->analyzeAPIs(repo_id);
+            logInfo("API analysis completed for: " + repo_id);
+            
+            return analysis;
+            
+        } catch (const std::exception& e) {
+            logError("analyzeAPIs", e);
+            throw;
+        }
+    }
+
+    // New method: Generate comprehensive code summary
+    json generateCodeSummary(const std::string& repo_id) {
+        try {
+            logInfo("Generating comprehensive code summary for: " + repo_id);
+            
+            auto summary = code_analyzer_->generateCodeSummary(repo_id);
+            logInfo("Code summary generated for: " + repo_id);
+            
+            return summary;
+            
+        } catch (const std::exception& e) {
+            logError("generateCodeSummary", e);
+            throw;
+        }
     }
 };
 
