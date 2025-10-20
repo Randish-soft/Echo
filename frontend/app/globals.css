@@ -49,6 +49,49 @@ body {
   border-radius: 6px;
 }
 
+/* -------------------------------------------------------
+   Form Inputs - Grey text boxes
+--------------------------------------------------------*/
+input[type="text"],
+input[type="url"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+textarea,
+select {
+  @apply bg-slate-800 border border-slate-600 text-slate-100 rounded-lg px-4 py-3 w-full;
+  @apply placeholder-slate-400;
+  @apply focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none;
+  @apply transition-all duration-200;
+}
+
+/* Specific styling for URL inputs (GitHub repository URL) */
+input[type="url"] {
+  @apply bg-slate-800 border-slate-600 text-slate-100;
+}
+
+/* Hover state for inputs */
+input[type="text"]:hover,
+input[type="url"]:hover,
+input[type="email"]:hover,
+input[type="password"]:hover,
+input[type="search"]:hover,
+textarea:hover,
+select:hover {
+  @apply border-slate-500;
+}
+
+/* Disabled state */
+input[type="text"]:disabled,
+input[type="url"]:disabled,
+input[type="email"]:disabled,
+input[type="password"]:disabled,
+input[type="search"]:disabled,
+textarea:disabled,
+select:disabled {
+  @apply bg-slate-900 border-slate-700 text-slate-400 cursor-not-allowed;
+}
+
 /* Links */
 a {
   @apply text-sky-300 hover:text-sky-200 transition-colors;

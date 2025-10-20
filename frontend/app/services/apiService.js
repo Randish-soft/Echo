@@ -2,37 +2,29 @@
 
 /**
  * Echo API Service
- * - Aligns with backend routes:
- *   GET  /api/health
- *   GET  /api/repos
- *   POST /api/repos/add           { github_url, branch? }
- *   POST /api/docs/generate       { repo_id, doc_type, audience? }
- *
- * Base URL resolution priority:
- *   1) window.__ECHO_API__ (runtime-injected on client)
- *   2) process.env.NEXT_PUBLIC_API_BASE
- *   3) http://localhost:8000
+ * Handles communication with the Echo backend API
  */
 
 const isBrowser = typeof window !== "undefined";
 
-const BASE =
-  (isBrowser && window.__ECHO_API__) ||
-  process.env.NEXT_PUBLIC_API_BASE ||
-  "http://localhost:8000";
+// Use localhost for browser, environment variable for SSR
+const BASE = isBrowser 
+  ? "http://localhost:8000" 
+  : (process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000");
 
-const DEFAULT_TIMEOUT = 15000;
+const DEFAULT_TIMEOUT = 60000;
+
+console.log(`🔧 API Base URL configured: ${BASE}`);
 
 /**
- * Internal: fetch wrapper with timeout + better error messages.
- * Returns parsed JSON if possible; otherwise returns text.
+ * Internal fetch wrapper with timeout and error handling
  */
 async function request(path, { method = "GET", body, headers = {}, timeout = DEFAULT_TIMEOUT } = {}) {
-  const url = path.startsWith("http") ? path : `${BASE}${path}`;
+  const url = `${BASE}${path}`;
   const controller = new AbortController();
-  const t = setTimeout(() => controller.abort(), timeout);
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-  const opts = {
+  const options = {
     method,
     headers: {
       "Content-Type": "application/json",
@@ -40,117 +32,128 @@ async function request(path, { method = "GET", body, headers = {}, timeout = DEF
     },
     signal: controller.signal,
   };
-  if (body !== undefined && body !== null) {
-    opts.body = JSON.stringify(body);
+
+  if (body) {
+    options.body = JSON.stringify(body);
   }
 
   try {
-    const res = await fetch(url, opts);
-    clearTimeout(t);
+    console.log(`🔄 Making ${method} request to: ${url}`);
+    const response = await fetch(url, options);
+    clearTimeout(timeoutId);
 
-    // Try to parse JSON; if that fails, fall back to text
-    const contentType = res.headers.get("content-type") || "";
-    const tryParse = async () => {
-      if (contentType.includes("application/json")) return await res.json();
-      const text = await res.text();
+    if (!response.ok) {
+      let errorData;
       try {
-        return JSON.parse(text);
+        errorData = await response.json();
       } catch {
-        return text;
+        errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
       }
-    };
-
-    const data = await tryParse();
-
-    if (!res.ok) {
-      const message =
-        (data && data.message) ||
-        (typeof data === "string" ? data : "Request failed");
-      const err = new Error(`${res.status} ${res.statusText}: ${message}`);
-      err.status = res.status;
-      err.details = data;
-      throw err;
+      
+      const error = new Error(errorData.details || errorData.error || `Request failed with status ${response.status}`);
+      error.status = response.status;
+      error.details = errorData;
+      throw error;
     }
 
+    // Parse successful response
+    const data = await response.json();
     return data;
-  } catch (err) {
-    clearTimeout(t);
-    // Normalize AbortError message
-    if (err.name === "AbortError") {
-      const abortErr = new Error(`Request timed out after ${Math.round(timeout / 1000)}s: ${path}`);
-      abortErr.code = "ETIMEOUT";
-      throw abortErr;
+
+  } catch (error) {
+    clearTimeout(timeoutId);
+    
+    if (error.name === 'AbortError') {
+      throw new Error(`Request timeout after ${timeout}ms`);
     }
-    throw err;
+    
+    if (error.message.includes('Failed to fetch')) {
+      throw new Error(`Cannot connect to backend server at ${BASE}. Please ensure the backend is running.`);
+    }
+    
+    throw error;
   }
 }
 
 /**
- * Health check
- * @returns {Promise<{status:string}>}
+ * Health check endpoint
  */
-async function getHealth() {
-  return await request("/api/health");
+export async function getHealth() {
+  return request('/api/health');
 }
 
 /**
- * List repositories
- * @returns {Promise<{status:string, repositories:Array, count:number}>}
+ * List all repositories
  */
-async function listRepositories() {
-  return await request("/api/repos");
+export async function listRepositories() {
+  return request('/api/repos');
 }
 
 /**
- * Add a repository by GitHub URL
- * @param {string} github_url - Full GitHub repo URL (e.g., https://github.com/user/repo)
- * @param {string} [branch='main']
- * @returns {Promise<{status:string, repository?:object}>}
+ * Add a new repository
+ * @param {string} github_url - GitHub repository URL
+ * @param {string} branch - Branch name (default: "main")
  */
-async function addRepository(github_url, branch = "main") {
-  if (!github_url || typeof github_url !== "string") {
-    throw new Error("github_url must be a non-empty string");
+export async function addRepository(github_url, branch = "main") {
+  if (!github_url) {
+    throw new Error('GitHub URL is required');
   }
-  const payload = { github_url, branch };
-  return await request("/api/repos/add", { method: "POST", body: payload });
+
+  // Clean the URL
+  const cleanUrl = github_url.trim().replace(/\.git$/, '');
+  
+  return request('/api/repos/add', {
+    method: 'POST',
+    body: {
+      github_url: cleanUrl,
+      branch: branch || "main"
+    },
+    timeout: 120000 // 2 minutes for cloning
+  });
 }
 
 /**
  * Generate documentation for a repository
- * @param {string} repo_id
- * @param {"internal"|"public"|"api"} [doc_type='internal']
- * @param {"developers"|"users"|"managers"} [audience='developers']
- * @returns {Promise<{status:string, documentation?:string, location?:string}>}
+ * @param {string} repo_id - Repository ID
+ * @param {string} doc_type - Documentation type ("internal" or "external")
+ * @param {string} audience - Target audience ("developers", "users", etc.)
  */
-async function generateDocumentation(repo_id, doc_type = "internal", audience = "developers") {
-  if (!repo_id || typeof repo_id !== "string") {
-    throw new Error("repo_id must be a non-empty string");
+export async function generateDocumentation(repo_id, doc_type = "internal", audience = "developers") {
+  if (!repo_id) {
+    throw new Error('Repository ID is required');
   }
-  const payload = { repo_id, doc_type, audience };
-  return await request("/api/docs/generate", { method: "POST", body: payload, timeout: 60000 });
+
+  return request('/api/docs/generate', {
+    method: 'POST',
+    body: {
+      repo_id,
+      doc_type,
+      audience
+    },
+    timeout: 180000 // 3 minutes for doc generation
+  });
 }
 
 /**
- * Optional: fetch a single repo (if your backend supports it later)
- * Left here as a convenience pattern.
+ * Get repository summary
+ * @param {string} repo_id - Repository ID
  */
-// async function getRepository(repo_id) {
-//   if (!repo_id) throw new Error("repo_id is required");
-//   return await request(`/api/repos/${encodeURIComponent(repo_id)}`);
-// }
+export async function getRepositorySummary(repo_id) {
+  if (!repo_id) {
+    throw new Error('Repository ID is required');
+  }
 
-export {
+  return request(`/api/repos/${repo_id}/summary`);
+}
+
+// Default export with all methods
+const apiService = {
   BASE,
   getHealth,
   listRepositories,
   addRepository,
   generateDocumentation,
+  getRepositorySummary
 };
 
-export default {
-  BASE,
-  getHealth,
-  listRepositories,
-  addRepository,
-  generateDocumentation,
-};
+export default apiService;

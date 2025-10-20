@@ -4,7 +4,7 @@ services:
     container_name: echo_db
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
       POSTGRES_DB: echo_db
     ports: ["5432:5432"]
     volumes:
@@ -21,13 +21,14 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile   # <— capital D (your C++ Crow image)
+      dockerfile: Dockerfile
     container_name: echo_backend
     environment:
       GITHUB_TOKEN: ${GITHUB_TOKEN}
       REPOS_PATH: /app/data/repositories
       SUMMARIES_PATH: /app/data/summaries
-      DATABASE_URL: postgresql://postgres:password@db:5432/echo_db
+      DATABASE_URL: postgresql://postgres:${DB_PASSWORD:-password}@db:5432/echo_db
+      CORS_ORIGIN: "http://localhost:3000"
     ports: ["8000:8000"]
     volumes:
       - backend_repos:/app/data/repositories
@@ -54,13 +55,13 @@ services:
       CHOKIDAR_USEPOLLING: "1"
       WATCHPACK_POLLING: "1"
       NODE_ENV: development
+      # Use the service name for internal Docker network communication
       NEXT_PUBLIC_API_BASE: "http://backend:8000/api"
     ports: ["3000:3000"]
     volumes:
       - ./frontend:/app
       - /app/node_modules
       - /app/.next
-    command: npm run dev
     depends_on:
       backend:
         condition: service_healthy

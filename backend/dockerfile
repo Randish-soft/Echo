@@ -13,11 +13,12 @@ RUN apt-get update && apt-get install -y \
     libboost-all-dev \
     curl \
     wget \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Clone required libraries
+# Clone required libraries with specific compatible versions
 RUN git clone https://github.com/CrowCpp/Crow.git libs/crow && \
     cd libs/crow && git checkout v1.0+5
 
@@ -32,9 +33,9 @@ COPY CMakeLists.txt ./
 # Create data directories
 RUN mkdir -p data/repositories data/summaries
 
-# Build the application
+# Build the application with more compatible C++ standard
 RUN mkdir -p build && cd build && \
-    cmake .. && \
+    cmake -DCMAKE_CXX_STANDARD=17 .. && \
     make -j$(nproc)
 
 # Expose port
