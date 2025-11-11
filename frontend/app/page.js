@@ -9,6 +9,7 @@ export default function HomePage() {
   const [step, setStep] = useState(1);
   const [selectedRepoId, setSelectedRepoId] = useState("");
   const [lastRepoList, setLastRepoList] = useState([]);
+  const [defaultDocType, setDefaultDocType] = useState("internal_architecture");
 
   return (
     <main className="min-h-screen bg-white text-gray-900">
@@ -54,13 +55,14 @@ export default function HomePage() {
         {step === 3 && (
           <DocGenerator
             repoId={selectedRepoId}
+            defaultDocType={defaultDocType}
             onBack={() => setStep(2)}
             onDone={() => {}}
           />
         )}
 
         <footer className="mt-10 text-xs text-gray-500">
-          Echo • Built with ❤️ by Randish • Powered by C++ &amp; Next.js
+          Echo • Built with ❤️ by Randish
         </footer>
       </div>
     </main>

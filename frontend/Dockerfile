@@ -1,6 +1,6 @@
 FROM node:20-alpine
 
-RUN apk add --no-cache libc6-compat curl
+RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 

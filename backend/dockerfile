@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
     zlib1g-dev \
     libboost-all-dev \
     curl \
+    libcurl4-openssl-dev \
     wget \
     && rm -rf /var/lib/apt/lists/*
 

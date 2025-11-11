@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import api from "../services/apiService";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import html2pdf from "html2pdf.js";
 
 /**
  * DocGenerator
@@ -25,6 +24,25 @@ export default function DocGenerator({
   const [banner, setBanner] = useState(null);
   const [documentation, setDocumentation] = useState("");
   const [location, setLocation] = useState("");
+
+  // Documentation type options organized by category
+  const internalDocs = [
+    { value: "internal_api", label: "API Documentation", desc: "REST endpoints, schemas, parameters" },
+    { value: "internal_database", label: "Database Documentation", desc: "Schemas, relationships, migrations" },
+    { value: "internal_architecture", label: "Architecture Documentation", desc: "System design, components, patterns" },
+    { value: "internal_onboarding", label: "Developer Onboarding", desc: "Setup, workflow, first contribution" },
+    { value: "internal_conventions", label: "Code Conventions", desc: "Style guide, best practices" },
+    { value: "internal_technical_spec", label: "Technical Specification", desc: "Detailed technical specs" }
+  ];
+
+  const externalDocs = [
+    { value: "external_user_manual", label: "User Manual", desc: "How to use features, workflows" },
+    { value: "external_installation", label: "Installation Guide", desc: "Setup, configuration, requirements" },
+    { value: "external_faq", label: "FAQ", desc: "Common questions and answers" },
+    { value: "external_troubleshooting", label: "Troubleshooting Guide", desc: "Common issues and solutions" },
+    { value: "external_release_notes", label: "Release Notes", desc: "Changes, features, bug fixes" },
+    { value: "external_integration", label: "Integration Guide", desc: "How to integrate with other systems" }
+  ];
 
   // Generate documentation from API
   async function handleGenerate(e) {
@@ -65,9 +83,13 @@ export default function DocGenerator({
   }
 
   // Export current markdown preview as PDF
-  function generatePdf() {
+  async function generatePdf() {
     const element = document.getElementById("pdf-preview");
     if (!element) return;
+
+    // Dynamically import html2pdf only on client side
+    const html2pdf = (await import("html2pdf.js")).default;
+
     html2pdf()
       .from(element)
       .set({
@@ -103,39 +125,97 @@ export default function DocGenerator({
       )}
 
       {/* Step form for doc type and audience */}
-      <form onSubmit={handleGenerate} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label className="block text-sm font-medium">Doc Type</label>
-          <select
-            value={docType}
-            onChange={(e) => setDocType(e.target.value)}
-            className="select mt-1"
-          >
-            <option value="internal">internal</option>
-            <option value="external">external</option>
-          </select>
+      <form onSubmit={handleGenerate} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Internal Documentation */}
+          <div>
+            <h3 className="text-lg font-semibold mb-3 text-gray-900">Internal Documentation</h3>
+            <p className="text-xs text-gray-600 mb-3">For developers and technical teams</p>
+            <div className="space-y-2">
+              {internalDocs.map((doc) => (
+                <label
+                  key={doc.value}
+                  className={`block p-3 border rounded-lg cursor-pointer transition ${
+                    docType === doc.value
+                      ? "border-gray-900 bg-gray-50"
+                      : "border-gray-200 hover:border-gray-400"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="docType"
+                    value={doc.value}
+                    checked={docType === doc.value}
+                    onChange={(e) => setDocType(e.target.value)}
+                    className="mr-2"
+                  />
+                  <span className="font-medium text-sm">{doc.label}</span>
+                  <p className="text-xs text-gray-600 ml-5 mt-1">{doc.desc}</p>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* External Documentation */}
+          <div>
+            <h3 className="text-lg font-semibold mb-3 text-gray-900">External Documentation</h3>
+            <p className="text-xs text-gray-600 mb-3">For end users and external stakeholders</p>
+            <div className="space-y-2">
+              {externalDocs.map((doc) => (
+                <label
+                  key={doc.value}
+                  className={`block p-3 border rounded-lg cursor-pointer transition ${
+                    docType === doc.value
+                      ? "border-gray-900 bg-gray-50"
+                      : "border-gray-200 hover:border-gray-400"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="docType"
+                    value={doc.value}
+                    checked={docType === doc.value}
+                    onChange={(e) => setDocType(e.target.value)}
+                    className="mr-2"
+                  />
+                  <span className="font-medium text-sm">{doc.label}</span>
+                  <p className="text-xs text-gray-600 ml-5 mt-1">{doc.desc}</p>
+                </label>
+              ))}
+            </div>
+          </div>
         </div>
 
+        {/* Audience Selection */}
         <div>
-          <label className="block text-sm font-medium">Audience</label>
+          <label className="block text-sm font-medium mb-2">Target Audience</label>
           <select
             value={audience}
             onChange={(e) => setAudience(e.target.value)}
-            className="select mt-1"
+            className="select w-full md:w-64"
           >
-            <option value="developers">developers</option>
-            <option value="users">users</option>
-            <option value="managers">managers</option>
+            <option value="developers">Developers</option>
+            <option value="users">End Users</option>
+            <option value="managers">Managers/Stakeholders</option>
+            <option value="technical">Technical Reviewers</option>
           </select>
         </div>
 
-        <div className="flex items-end gap-3">
+        {/* Action Buttons */}
+        <div className="flex items-center gap-3 pt-4 border-t">
           <button
             type="submit"
             disabled={!repoId || generating}
-            className="btn-primary disabled:opacity-60"
+            className="btn-primary disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {generating ? "Generating…" : "Generate"}
+            {generating ? (
+              <>
+                <span className="inline-block animate-spin mr-2">⚙️</span>
+                Generating (30-60s)...
+              </>
+            ) : (
+              "Generate Documentation"
+            )}
           </button>
           {typeof onBack === "function" && (
             <button
@@ -147,6 +227,13 @@ export default function DocGenerator({
               Back
             </button>
           )}
+        </div>
+
+        {/* AI Notice */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800">
+          <strong>Note:</strong> Documentation is generated using AI (local LLM).
+          For formal regulatory submissions (ISO, EU Commission), please have this reviewed
+          and verified by appropriate personnel.
         </div>
       </form>
 

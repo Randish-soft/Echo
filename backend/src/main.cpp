@@ -271,11 +271,15 @@ int main() {
                     audience = "developers";
                 }
                 
-                // Validate doc_type
-                if (doc_type != "internal" && doc_type != "external") {
+                // Validate doc_type - accept detailed types (internal_*, external_*) or legacy (internal, external)
+                bool valid_type = (doc_type == "internal" || doc_type == "external" ||
+                                   doc_type.rfind("internal_", 0) == 0 ||
+                                   doc_type.rfind("external_", 0) == 0);
+
+                if (!valid_type) {
                     crow::json::wvalue error;
                     error["error"] = "Invalid documentation type";
-                    error["details"] = "doc_type must be 'internal' or 'external'";
+                    error["details"] = "doc_type must start with 'internal_' or 'external_' (e.g., 'internal_api', 'external_user_manual')";
                     return crow::response(400, error);
                 }
                 

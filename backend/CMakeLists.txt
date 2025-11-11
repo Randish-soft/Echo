@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(ZLIB REQUIRED)
+find_package(CURL REQUIRED)
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/libs/crow/include
@@ -21,6 +22,7 @@ target_link_libraries(echo_server
     OpenSSL::SSL
     OpenSSL::Crypto
     ZLIB::ZLIB
+    CURL::libcurl
 )
 
 set_target_properties(echo_server PROPERTIES

@@ -11,6 +11,8 @@
 #include <algorithm>
 #include <iostream>
 #include <nlohmann/json.hpp>
+#include "LLMService.h"
+#include "PromptTemplates.h"
 
 namespace fs = std::filesystem;
 using json = nlohmann::json;
@@ -18,15 +20,16 @@ using json = nlohmann::json;
 class DocumentationService {
 private:
     std::string summaries_path;
+    std::shared_ptr<LLMService> llm_service;
 
     // Load repository data from saved JSON
     json loadRepositoryData(const std::string& repo_id) {
         std::string summary_file = summaries_path + "/" + repo_id + ".json";
-        
+
         if (!fs::exists(summary_file)) {
             throw std::runtime_error("Repository data not found: " + repo_id);
         }
-        
+
         std::ifstream file(summary_file);
         json data;
         file >> data;
@@ -41,330 +44,288 @@ private:
         return std::string(buf);
     }
 
-    // Organize files by their type/purpose
-    std::map<std::string, std::vector<std::pair<std::string, json>>> organizeFilesByType(const json& files) {
-        std::map<std::string, std::vector<std::pair<std::string, json>>> organized;
-        
-        for (auto& [file_path, file_info] : files.items()) {
-            std::string summary = file_info.value("summary", "");
-            std::string filename = fs::path(file_path).filename().string();
-            
-            // Convert to lowercase for comparison
-            std::transform(filename.begin(), filename.end(), filename.begin(), ::tolower);
-            std::transform(summary.begin(), summary.end(), summary.begin(), ::tolower);
-            
-            // Categorize files
-            if (summary.find("entry point") != std::string::npos || 
-                filename == "main.py" || filename == "app.py" || 
-                filename == "index.js" || filename == "server.js") {
-                organized["entry_points"].push_back({file_path, file_info});
-            } 
-            else if (summary.find("model") != std::string::npos || 
-                     summary.find("schema") != std::string::npos) {
-                organized["models"].push_back({file_path, file_info});
-            } 
-            else if (summary.find("service") != std::string::npos) {
-                organized["services"].push_back({file_path, file_info});
-            } 
-            else if (summary.find("controller") != std::string::npos || 
-                     summary.find("route") != std::string::npos) {
-                organized["controllers"].push_back({file_path, file_info});
-            } 
-            else if (summary.find("utility") != std::string::npos || 
-                     summary.find("helper") != std::string::npos) {
-                organized["utilities"].push_back({file_path, file_info});
-            } 
-            else if (summary.find("test") != std::string::npos) {
-                organized["tests"].push_back({file_path, file_info});
-            } 
-            else if (summary.find("config") != std::string::npos) {
-                organized["config"].push_back({file_path, file_info});
-            } 
-            else {
-                organized["other"].push_back({file_path, file_info});
-            }
-        }
-        
-        return organized;
-    }
+    // Build repository overview string
+    std::string buildRepositoryOverview(const json& repo_data) {
+        std::ostringstream overview;
 
-    // Calculate project statistics
-    std::map<std::string, int> getProjectStats(const json& repo_data) {
-        std::map<std::string, int> stats;
-        
+        int total_files = repo_data.value("analyzed_files", 0);
         int total_lines = 0;
         std::map<std::string, int> languages;
-        
+
         if (repo_data.contains("files")) {
             for (auto& [file_path, file_info] : repo_data["files"].items()) {
                 if (file_info.contains("analysis")) {
-                    // Count lines
                     total_lines += file_info["analysis"].value("lines", 0);
-                    
-                    // Count languages
-                    std::string file_type = file_info["analysis"].value("type", "unknown");
-                    languages[file_type]++;
+                    std::string type = file_info["analysis"].value("type", "unknown");
+                    languages[type]++;
                 }
             }
         }
-        
-        stats["total_files"] = repo_data.value("analyzed_files", 0);
-        stats["total_lines"] = total_lines;
-        
-        return stats;
+
+        overview << "- Total Files: " << total_files << "\n";
+        overview << "- Total Lines of Code: " << total_lines << "\n";
+        overview << "- Languages/Technologies: ";
+
+        for (const auto& [lang, count] : languages) {
+            overview << lang << " (" << count << " files), ";
+        }
+
+        return overview.str();
+    }
+
+    // Build file structure summary
+    std::string buildFileStructure(const json& repo_data) {
+        std::ostringstream structure;
+
+        if (!repo_data.contains("files")) {
+            return "No file information available.\n";
+        }
+
+        // Organize files by directory
+        std::map<std::string, std::vector<std::string>> dirs;
+
+        for (auto& [file_path, file_info] : repo_data["files"].items()) {
+            fs::path p(file_path);
+            std::string dir = p.parent_path().string();
+            if (dir.empty()) dir = ".";
+            dirs[dir].push_back(p.filename().string());
+        }
+
+        // Output structure
+        for (const auto& [dir, files] : dirs) {
+            structure << "**" << dir << "/**\n";
+            for (const auto& file : files) {
+                structure << "  - " << file << "\n";
+            }
+            structure << "\n";
+        }
+
+        return structure.str();
+    }
+
+    // Build key files summary with analysis
+    std::string buildKeyFilesSummary(const json& repo_data) {
+        std::ostringstream summary;
+
+        if (!repo_data.contains("files")) {
+            return "No file analysis available.\n";
+        }
+
+        // Categorize files
+        std::map<std::string, std::vector<std::pair<std::string, json>>> organized;
+
+        for (auto& [file_path, file_info] : repo_data["files"].items()) {
+            std::string file_summary = file_info.value("summary", "");
+            std::string filename = fs::path(file_path).filename().string();
+
+            std::string lower_summary = file_summary;
+            std::transform(lower_summary.begin(), lower_summary.end(),
+                         lower_summary.begin(), ::tolower);
+
+            // Categorize
+            if (lower_summary.find("entry point") != std::string::npos ||
+                filename == "main.py" || filename == "app.py" ||
+                filename == "index.js" || filename == "main.cpp" ||
+                filename == "server.js") {
+                organized["entry_points"].push_back({file_path, file_info});
+            }
+            else if (lower_summary.find("model") != std::string::npos ||
+                     lower_summary.find("schema") != std::string::npos) {
+                organized["models"].push_back({file_path, file_info});
+            }
+            else if (lower_summary.find("service") != std::string::npos) {
+                organized["services"].push_back({file_path, file_info});
+            }
+            else if (lower_summary.find("controller") != std::string::npos ||
+                     lower_summary.find("route") != std::string::npos ||
+                     lower_summary.find("api") != std::string::npos) {
+                organized["api_routes"].push_back({file_path, file_info});
+            }
+            else if (lower_summary.find("config") != std::string::npos) {
+                organized["configuration"].push_back({file_path, file_info});
+            }
+            else if (lower_summary.find("test") != std::string::npos) {
+                organized["tests"].push_back({file_path, file_info});
+            }
+        }
+
+        // Build summary for each category
+        for (const auto& [category, files] : organized) {
+            if (files.empty()) continue;
+
+            summary << "### " << category << "\n\n";
+
+            for (const auto& [file_path, file_info] : files) {
+                summary << "**" << file_path << "**\n";
+                summary << "- Summary: " << file_info.value("summary", "No summary") << "\n";
+
+                if (file_info.contains("analysis")) {
+                    const auto& analysis = file_info["analysis"];
+
+                    if (analysis.contains("functions") && !analysis["functions"].empty()) {
+                        summary << "- Functions: ";
+                        int count = 0;
+                        for (const auto& func : analysis["functions"]) {
+                            if (count++ >= 5) break;
+                            summary << func.get<std::string>() << ", ";
+                        }
+                        summary << "\n";
+                    }
+
+                    if (analysis.contains("classes") && !analysis["classes"].empty()) {
+                        summary << "- Classes: ";
+                        for (const auto& cls : analysis["classes"]) {
+                            summary << cls.get<std::string>() << ", ";
+                        }
+                        summary << "\n";
+                    }
+                }
+
+                summary << "\n";
+            }
+        }
+
+        return summary.str();
+    }
+
+    // Map doc types from frontend to internal categories
+    std::string mapDocumentationType(const std::string& frontend_type) {
+        static const std::map<std::string, std::string> type_map = {
+            {"internal_api", "api_documentation"},
+            {"internal_database", "database_documentation"},
+            {"internal_architecture", "architecture_documentation"},
+            {"internal_onboarding", "developer_onboarding"},
+            {"internal_conventions", "code_conventions"},
+            {"internal_technical_spec", "technical_specification"},
+            {"external_user_manual", "user_manual"},
+            {"external_installation", "installation_guide"},
+            {"external_faq", "faq"},
+            {"external_troubleshooting", "troubleshooting_guide"},
+            {"external_release_notes", "release_notes"},
+            {"external_integration", "integration_guide"},
+            // Legacy support
+            {"internal", "architecture_documentation"},
+            {"external", "user_manual"}
+        };
+
+        auto it = type_map.find(frontend_type);
+        if (it != type_map.end()) {
+            return it->second;
+        }
+
+        return frontend_type;
     }
 
 public:
     DocumentationService() {
         const char* summaries = std::getenv("SUMMARIES_PATH");
         summaries_path = summaries ? summaries : "./data/summaries";
-        std::cout << "✓ Documentation service initialized" << std::endl;
+
+        // Initialize LLM service
+        llm_service = std::make_shared<LLMService>();
+
+        std::cout << "✓ Documentation service initialized with LLM support" << std::endl;
+
+        // Check LLM health
+        if (!llm_service->checkHealth()) {
+            std::cerr << "⚠️  Warning: LLM service not available. Will use fallback generation." << std::endl;
+        }
     }
 
-    // Generate internal documentation for developers
-    std::string generateInternalDocumentation(const json& repo_data, const std::string& audience) {
-        std::ostringstream doc;
-        
-        doc << "# Internal Documentation\n";
-        doc << "Generated: " << getCurrentTimestamp() << "\n";
-        doc << "Audience: " << audience << "\n\n";
-        
-        doc << "---\n\n";
-        doc << "## Project Overview\n\n";
-        
-        // Calculate statistics
-        auto stats = getProjectStats(repo_data);
-        
-        doc << "**Statistics:**\n";
-        doc << "- Total Files: " << stats["total_files"] << "\n";
-        doc << "- Total Lines of Code: " << stats["total_lines"] << "\n";
-        
-        // Count languages
-        std::map<std::string, int> languages;
-        if (repo_data.contains("files")) {
-            for (auto& [file_path, file_info] : repo_data["files"].items()) {
-                if (file_info.contains("analysis")) {
-                    std::string type = file_info["analysis"].value("type", "unknown");
-                    languages[type]++;
-                }
-            }
-        }
-        
-        doc << "- Languages: ";
-        for (const auto& [lang, count] : languages) {
-            doc << lang << " (" << count << ") ";
-        }
-        doc << "\n\n";
-        
-        doc << "---\n\n";
-        doc << "## Architecture\n\n";
-        
-        // Organize files by type
-        auto organized = organizeFilesByType(repo_data["files"]);
-        
-        // Entry Points
-        doc << "### Entry Points\n\n";
-        if (!organized["entry_points"].empty()) {
-            for (const auto& [file_path, file_info] : organized["entry_points"]) {
-                doc << "**" << file_path << "**\n";
-                doc << "- " << file_info.value("summary", "No summary") << "\n";
-                
-                if (file_info.contains("analysis") && file_info["analysis"].contains("functions")) {
-                    doc << "- Key functions: ";
-                    int count = 0;
-                    for (const auto& func : file_info["analysis"]["functions"]) {
-                        if (count++ >= 5) break;
-                        doc << func.get<std::string>() << ", ";
-                    }
-                    doc << "\n";
-                }
-                doc << "\n";
-            }
-        } else {
-            doc << "No entry point files detected.\n\n";
-        }
-        
-        // Data Models
-        doc << "### Data Models\n\n";
-        if (!organized["models"].empty()) {
-            for (const auto& [file_path, file_info] : organized["models"]) {
-                doc << "**" << file_path << "**\n";
-                doc << "- " << file_info.value("summary", "No summary") << "\n";
-                
-                if (file_info.contains("analysis") && file_info["analysis"].contains("classes")) {
-                    doc << "- Classes: ";
-                    for (const auto& cls : file_info["analysis"]["classes"]) {
-                        doc << cls.get<std::string>() << ", ";
-                    }
-                    doc << "\n";
-                }
-                doc << "\n";
-            }
-        } else {
-            doc << "No model files detected.\n\n";
-        }
-        
-        // Services
-        doc << "### Services & Business Logic\n\n";
-        if (!organized["services"].empty()) {
-            for (const auto& [file_path, file_info] : organized["services"]) {
-                doc << "**" << file_path << "**\n";
-                doc << "- " << file_info.value("summary", "No summary") << "\n\n";
-            }
-        } else {
-            doc << "No service files detected.\n\n";
-        }
-        
-        // Controllers
-        doc << "### Controllers & Routes\n\n";
-        if (!organized["controllers"].empty()) {
-            for (const auto& [file_path, file_info] : organized["controllers"]) {
-                doc << "**" << file_path << "**\n";
-                doc << "- " << file_info.value("summary", "No summary") << "\n\n";
-            }
-        } else {
-            doc << "No controller/route files detected.\n\n";
-        }
-        
-        // Utilities
-        doc << "### Utilities\n\n";
-        if (!organized["utilities"].empty()) {
-            for (const auto& [file_path, file_info] : organized["utilities"]) {
-                doc << "**" << file_path << "**\n";
-                doc << "- " << file_info.value("summary", "No summary") << "\n\n";
-            }
-        } else {
-            doc << "No utility files detected.\n\n";
-        }
-        
-        // Configuration
-        doc << "### Configuration\n\n";
-        if (!organized["config"].empty()) {
-            for (const auto& [file_path, file_info] : organized["config"]) {
-                doc << "**" << file_path << "**\n";
-                doc << "- " << file_info.value("summary", "No summary") << "\n\n";
-            }
-        } else {
-            doc << "No configuration files detected.\n\n";
-        }
-        
-        // Tests
-        doc << "### Tests\n\n";
-        if (!organized["tests"].empty()) {
-            doc << "Test coverage includes " << organized["tests"].size() << " test file(s):\n\n";
-            for (const auto& [file_path, file_info] : organized["tests"]) {
-                doc << "- **" << file_path << "**\n";
-            }
-            doc << "\n";
-        } else {
-            doc << "No test files detected.\n\n";
-        }
-        
-        doc << "---\n\n";
-        doc << "## Development Notes\n\n";
-        doc << "### File Structure Summary\n\n";
-        doc << "- Entry Points: " << organized["entry_points"].size() << "\n";
-        doc << "- Models: " << organized["models"].size() << "\n";
-        doc << "- Services: " << organized["services"].size() << "\n";
-        doc << "- Controllers: " << organized["controllers"].size() << "\n";
-        doc << "- Utilities: " << organized["utilities"].size() << "\n";
-        doc << "- Tests: " << organized["tests"].size() << "\n";
-        doc << "- Configuration: " << organized["config"].size() << "\n";
-        doc << "- Other: " << organized["other"].size() << "\n\n";
-        
-        return doc.str();
-    }
-
-    // Generate external documentation for end users
-    std::string generateExternalDocumentation(const json& repo_data, const std::string& audience) {
-        std::ostringstream doc;
-        
-        doc << "# User Documentation\n";
-        doc << "Generated: " << getCurrentTimestamp() << "\n\n";
-        
-        doc << "## Overview\n\n";
-        
-        auto stats = getProjectStats(repo_data);
-        doc << "This project consists of " << stats["total_files"] << " files ";
-        doc << "with approximately " << stats["total_lines"] << " lines of code.\n\n";
-        
-        doc << "---\n\n";
-        doc << "## Getting Started\n\n";
-        doc << "### Installation\n\n";
-        doc << "1. Clone the repository\n";
-        doc << "2. Install dependencies\n";
-        doc << "3. Configure environment variables\n";
-        doc << "4. Run the application\n\n";
-        
-        // Configuration section
-        auto organized = organizeFilesByType(repo_data["files"]);
-        
-        if (!organized["config"].empty()) {
-            doc << "### Configuration Files\n\n";
-            doc << "The following configuration files are available:\n\n";
-            for (const auto& [file_path, file_info] : organized["config"]) {
-                doc << "- **" << file_path << "**: " << file_info.value("summary", "Configuration file") << "\n";
-            }
-            doc << "\n";
-        }
-        
-        // Features from entry points
-        if (!organized["entry_points"].empty()) {
-            doc << "## Features\n\n";
-            for (const auto& [file_path, file_info] : organized["entry_points"]) {
-                doc << "Based on **" << file_path << "**:\n";
-                if (file_info.contains("analysis") && file_info["analysis"].contains("functions")) {
-                    for (const auto& func : file_info["analysis"]["functions"]) {
-                        doc << "- " << func.get<std::string>() << "\n";
-                    }
-                }
-                doc << "\n";
-            }
-        }
-        
-        // API Endpoints from controllers
-        if (!organized["controllers"].empty()) {
-            doc << "## API Endpoints\n\n";
-            for (const auto& [file_path, file_info] : organized["controllers"]) {
-                doc << "### " << fs::path(file_path).filename().string() << "\n";
-                doc << file_info.value("summary", "API endpoint") << "\n\n";
-            }
-        }
-        
-        doc << "---\n\n";
-        doc << "## FAQ\n\n";
-        doc << "### How do I start the application?\n";
-        doc << "Refer to the entry point files for startup instructions.\n\n";
-        
-        doc << "### What are the system requirements?\n";
-        doc << "This project is built with multiple technologies. Check the configuration files for specific requirements.\n\n";
-        
-        doc << "### Where can I find more information?\n";
-        doc << "Please refer to the internal documentation or contact the development team.\n\n";
-        
-        return doc.str();
-    }
-
-    // Main documentation generation function
+    // Generate documentation using LLM
     std::string generateDocumentation(
-        const std::string& repo_id, 
-        const std::string& doc_type, 
+        const std::string& repo_id,
+        const std::string& doc_type,
         const std::string& audience = "developers"
     ) {
         std::cout << "📝 Generating " << doc_type << " documentation for repo: " << repo_id << std::endl;
-        
+
         // Load repository data
         json repo_data = loadRepositoryData(repo_id);
-        
-        if (doc_type == "internal") {
-            return generateInternalDocumentation(repo_data, audience);
-        } 
-        else if (doc_type == "external") {
-            return generateExternalDocumentation(repo_data, audience);
-        } 
-        else {
-            throw std::runtime_error("Unknown documentation type: " + doc_type);
+
+        // Map doc type
+        std::string mapped_type = mapDocumentationType(doc_type);
+
+        // Check if LLM is available
+        if (!llm_service->checkHealth()) {
+            std::cerr << "⚠️  LLM not available, using fallback generation" << std::endl;
+            return generateFallbackDocumentation(repo_data, mapped_type, audience);
         }
+
+        try {
+            // Build context from repository data
+            std::string repo_overview = buildRepositoryOverview(repo_data);
+            std::string file_structure = buildFileStructure(repo_data);
+            std::string key_files_summary = buildKeyFilesSummary(repo_data);
+
+            // Build prompt
+            std::string prompt = PromptTemplates::buildPrompt(
+                mapped_type,
+                audience,
+                repo_overview,
+                file_structure,
+                key_files_summary
+            );
+
+            // Get system prompt
+            std::string system_prompt = PromptTemplates::getSystemPrompt(mapped_type);
+
+            std::cout << "🤖 Generating documentation with LLM (this may take 30-60 seconds)..." << std::endl;
+
+            // Generate with LLM
+            std::string documentation = llm_service->generate(prompt, system_prompt);
+
+            // Add header with metadata
+            std::ostringstream final_doc;
+            final_doc << "# Documentation\n\n";
+            final_doc << "**Generated:** " << getCurrentTimestamp() << "\n";
+            final_doc << "**Type:** " << mapped_type << "\n";
+            final_doc << "**Audience:** " << audience << "\n";
+            final_doc << "**Repository:** " << repo_id << "\n\n";
+            final_doc << "---\n\n";
+            final_doc << documentation << "\n\n";
+            final_doc << "---\n\n";
+            final_doc << "*This documentation was generated using AI assistance. "
+                      << "For formal regulatory submissions, please have this reviewed and "
+                      << "verified by appropriate personnel.*\n";
+
+            return final_doc.str();
+
+        } catch (const std::exception& e) {
+            std::cerr << "❌ LLM generation failed: " << e.what() << std::endl;
+            std::cerr << "⚠️  Falling back to basic generation" << std::endl;
+            return generateFallbackDocumentation(repo_data, mapped_type, audience);
+        }
+    }
+
+private:
+    // Fallback documentation generation (basic template-based)
+    std::string generateFallbackDocumentation(
+        const json& repo_data,
+        const std::string& doc_type,
+        const std::string& audience
+    ) {
+        std::ostringstream doc;
+
+        doc << "# " << doc_type << " Documentation\n";
+        doc << "Generated: " << getCurrentTimestamp() << "\n";
+        doc << "Audience: " << audience << "\n\n";
+        doc << "---\n\n";
+
+        doc << "## Repository Overview\n\n";
+        doc << buildRepositoryOverview(repo_data) << "\n\n";
+
+        doc << "## File Structure\n\n";
+        doc << buildFileStructure(repo_data) << "\n\n";
+
+        doc << "## Key Components\n\n";
+        doc << buildKeyFilesSummary(repo_data) << "\n\n";
+
+        doc << "---\n\n";
+        doc << "*Note: This is basic fallback documentation. "
+            << "For enhanced documentation, ensure LLM service is running.*\n";
+
+        return doc.str();
     }
 };
 
