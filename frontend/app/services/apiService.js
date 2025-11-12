@@ -129,7 +129,16 @@ async function generateDocumentation(repo_id, doc_type = "internal", audience = 
     throw new Error("repo_id must be a non-empty string");
   }
   const payload = { repo_id, doc_type, audience };
-  return await request("/api/docs/generate", { method: "POST", body: payload, timeout: 60000 });
+  // Extended timeout for LLM generation (5 minutes to match backend)
+  return await request("/api/docs/generate", { method: "POST", body: payload, timeout: 300000 });
+}
+
+/**
+ * Get system information and selected model
+ * @returns {Promise<{status:string, system:object, selected_model:object, available_models:array}>}
+ */
+async function getSystemInfo() {
+  return await request("/api/system/info");
 }
 
 /**
@@ -147,6 +156,7 @@ export {
   listRepositories,
   addRepository,
   generateDocumentation,
+  getSystemInfo,
 };
 
 export default {
@@ -155,4 +165,5 @@ export default {
   listRepositories,
   addRepository,
   generateDocumentation,
+  getSystemInfo,
 };

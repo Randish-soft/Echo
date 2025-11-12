@@ -7,6 +7,8 @@
 #include <nlohmann/json.hpp>
 #include <curl/curl.h>
 #include <memory>
+#include "../utils/SystemDetector.h"
+#include "../utils/ModelSelector.h"
 
 using json = nlohmann::json;
 
@@ -14,6 +16,8 @@ class LLMService {
 private:
     std::string ollama_host;
     std::string model_name;
+    SystemSpecs system_specs;
+    ModelConfig model_config;
 
     // Callback for CURL to write response data
     static size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* userp) {
@@ -78,11 +82,56 @@ public:
         const char* host = std::getenv("OLLAMA_HOST");
         ollama_host = host ? host : "http://localhost:11434";
 
-        // Default model - can be configured later
-        model_name = "llama3.1:8b";
+        std::cout << "\n🔧 Initializing LLM Service..." << std::endl;
+        std::cout << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" << std::endl;
 
-        std::cout << "✓ LLM service initialized (Host: " << ollama_host
-                  << ", Model: " << model_name << ")" << std::endl;
+        // Detect system specifications
+        system_specs = SystemDetector::detectSystem();
+
+        // Select optimal model based on system specs
+        // Check for manual override via environment variable
+        const char* manual_model = std::getenv("OLLAMA_MODEL");
+        if (manual_model) {
+            model_name = manual_model;
+            std::cout << "\n⚙️  Manual model override: " << model_name << std::endl;
+
+            // Try to find config for manual model
+            auto models = ModelSelector::getAllModels();
+            bool found = false;
+            for (const auto& m : models) {
+                if (m.model_name == model_name) {
+                    model_config = m;
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                // Use default config for unknown model
+                model_config = {
+                    model_name,
+                    model_name,
+                    "custom",
+                    8, 4,
+                    16, 8,
+                    4096,
+                    2048,
+                    0.5,
+                    "Custom model configuration",
+                    60
+                };
+            }
+        } else {
+            // Auto-select optimal model
+            model_config = ModelSelector::selectOptimalModel(system_specs);
+            model_name = model_config.model_name;
+        }
+
+        std::cout << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" << std::endl;
+        std::cout << "✓ LLM service initialized" << std::endl;
+        std::cout << "  Host: " << ollama_host << std::endl;
+        std::cout << "  Model: " << model_name << std::endl;
+        std::cout << std::endl;
     }
 
     // Pull a model if not already available
@@ -118,11 +167,12 @@ public:
                 payload["system"] = system_prompt;
             }
 
-            // Generation options
+            // Generation options - use model-specific configuration
             payload["options"] = json::object();
-            payload["options"]["temperature"] = 0.7;
+            payload["options"]["temperature"] = model_config.temperature;
             payload["options"]["top_p"] = 0.9;
-            payload["options"]["num_predict"] = 4096; // Max tokens to generate
+            payload["options"]["num_predict"] = model_config.num_predict;
+            payload["options"]["num_ctx"] = model_config.context_length;
 
             std::cout << "🤖 Generating with LLM..." << std::endl;
             std::string response = makeRequest("/api/generate", payload);
@@ -224,6 +274,21 @@ public:
     // Get current model
     std::string getModel() const {
         return model_name;
+    }
+
+    // Get system specifications
+    SystemSpecs getSystemSpecs() const {
+        return system_specs;
+    }
+
+    // Get model configuration
+    ModelConfig getModelConfig() const {
+        return model_config;
+    }
+
+    // Get all available models
+    std::vector<ModelConfig> getAvailableModels() const {
+        return ModelSelector::getAllModels();
     }
 };
 

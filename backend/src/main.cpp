@@ -84,6 +84,7 @@ int main() {
             response["status"] = "running";
             response["endpoints"] = crow::json::wvalue::object();
             response["endpoints"]["/api/health"] = "Health check endpoint";
+            response["endpoints"]["/api/system/info"] = "Get system specs and selected model";
             response["endpoints"]["/api/repos/add"] = "Add new repository (POST)";
             response["endpoints"]["/api/repos"] = "List all repositories";
             response["endpoints"]["/api/repos/<id>/summary"] = "Get repository summary";
@@ -100,7 +101,74 @@ int main() {
             response["timestamp"] = std::chrono::system_clock::now().time_since_epoch().count();
             return response;
         });
-        
+
+        // System info endpoint - shows detected system specs and selected model
+        CROW_ROUTE(app, "/api/system/info")
+        ([&doc_service](){
+            logRequest("GET", "/api/system/info");
+
+            try {
+                auto llm_service = doc_service->getLLMService();
+                if (!llm_service) {
+                    crow::json::wvalue error;
+                    error["error"] = "LLM service not available";
+                    return crow::response(503, error);
+                }
+
+                auto specs = llm_service->getSystemSpecs();
+                auto model_config = llm_service->getModelConfig();
+                auto available_models = llm_service->getAvailableModels();
+
+                crow::json::wvalue response;
+                response["status"] = "success";
+
+                // System specifications
+                response["system"]["platform"] = specs.platform;
+                response["system"]["cpu_brand"] = specs.cpu_brand;
+                response["system"]["cpu_cores"] = specs.cpu_cores;
+                response["system"]["total_ram_gb"] = specs.total_ram_gb;
+                response["system"]["available_ram_gb"] = specs.available_ram_gb;
+                response["system"]["gpu_type"] = specs.gpu_type;
+                response["system"]["has_metal"] = specs.has_metal;
+                response["system"]["has_cuda"] = specs.has_cuda;
+
+                // Selected model
+                response["selected_model"]["name"] = model_config.model_name;
+                response["selected_model"]["display_name"] = model_config.display_name;
+                response["selected_model"]["tier"] = model_config.tier;
+                response["selected_model"]["description"] = model_config.description;
+                response["selected_model"]["estimated_time_sec"] = model_config.estimated_time_sec;
+                response["selected_model"]["context_length"] = model_config.context_length;
+                response["selected_model"]["num_predict"] = model_config.num_predict;
+
+                // Available models
+                crow::json::wvalue::list models_list;
+                for (const auto& model : available_models) {
+                    crow::json::wvalue m;
+                    m["name"] = model.model_name;
+                    m["display_name"] = model.display_name;
+                    m["tier"] = model.tier;
+                    m["description"] = model.description;
+                    m["min_ram_gb"] = model.min_ram_gb;
+                    m["min_cores"] = model.min_cores;
+                    m["recommended_ram_gb"] = model.recommended_ram_gb;
+                    m["recommended_cores"] = model.recommended_cores;
+                    m["estimated_time_sec"] = model.estimated_time_sec;
+                    models_list.push_back(std::move(m));
+                }
+                response["available_models"] = std::move(models_list);
+
+                return crow::response(200, response);
+
+            } catch (const std::exception& e) {
+                logError("System info", e);
+                crow::json::wvalue error;
+                error["error"] = "Failed to retrieve system information";
+                error["details"] = e.what();
+                return crow::response(500, error);
+            }
+        });
+
         // Add repository endpoint
         CROW_ROUTE(app, "/api/repos/add").methods(crow::HTTPMethod::Post)
         ([&github_service, &scanner_service](const crow::request& req){

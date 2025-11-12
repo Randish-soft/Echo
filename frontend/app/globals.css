@@ -6,28 +6,18 @@
 @tailwind utilities;
 
 /* -------------------------------------------------------
-   Theme Root: Light/Dark + Design Tokens
+   Modern Theme: Brown, Black, White
 --------------------------------------------------------*/
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  /* semantic design tokens (easier theming later) */
-  --color-bg: 15 23 42; /* slate-900 */
-  --color-surface: 30 41 59; /* slate-800 */
-  --color-border: 255 255 255 / 0.08;
-  --color-text: 226 232 240; /* slate-200 */
-  --color-accent: 56 189 248; /* sky-400 */
-  --radius-lg: 1rem;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    --color-bg: 241 245 249; /* slate-100 */
-    --color-surface: 255 255 255;
-    --color-border: 0 0 0 / 0.1;
-    --color-text: 15 23 42; /* slate-900 */
-    --color-accent: 37 99 235; /* blue-600 */
-  }
+  /* Modern minimalistic palette */
+  --color-bg: 255 255 255; /* white */
+  --color-surface: 250 247 245; /* warm white */
+  --color-border: 120 90 70; /* brown */
+  --color-text: 20 20 20; /* near black */
+  --color-accent: 139 94 60; /* warm brown */
+  --radius: 15px; /* consistent rounded edges */
 }
 
 /* -------------------------------------------------------
@@ -46,8 +36,8 @@ html {
 
 body {
   @apply antialiased;
-  background-color: rgb(var(--color-bg));
-  color: rgb(var(--color-text));
+  background-color: #ffffff;
+  color: #141414;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
   line-height: 1.65;
@@ -70,24 +60,28 @@ body {
 
 /* Text selection */
 ::selection {
-  background: rgba(56, 189, 248, 0.35); /* sky-400/35 */
-  color: #fff;
+  background: rgba(139, 94, 60, 0.3);
+  color: #141414;
 }
 
 /* -------------------------------------------------------
    Accessible Focus Styles
 --------------------------------------------------------*/
 :focus-visible {
-  outline: 2px solid rgb(var(--color-accent) / 0.6);
+  outline: 2px solid #8b5e3c;
   outline-offset: 3px;
-  border-radius: 0.5rem;
+  border-radius: var(--radius);
 }
 
 /* -------------------------------------------------------
    Links
 --------------------------------------------------------*/
 a {
-  @apply text-sky-400 hover:text-sky-300 transition-colors;
+  color: #8b5e3c;
+  transition: color 0.2s ease;
+}
+a:hover {
+  color: #6d4a2e;
 }
 
 /* -------------------------------------------------------
@@ -103,12 +97,15 @@ a {
    Cards & Panels
 --------------------------------------------------------*/
 .card {
-  @apply rounded-2xl border border-white/10 bg-slate-900/60 shadow-lg backdrop-blur-sm;
+  border-radius: var(--radius);
+  border: 1px solid #785a46;
+  background-color: #faf7f5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .card:hover {
-  @apply shadow-xl;
-  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
 }
 
 /* -------------------------------------------------------
@@ -116,7 +113,7 @@ a {
 --------------------------------------------------------*/
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgb(148 163 184 / 0.3) transparent;
+  scrollbar-color: rgba(120, 90, 70, 0.3) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -124,63 +121,101 @@ a {
   width: 10px;
 }
 *::-webkit-scrollbar-thumb {
-  background-color: rgb(148 163 184 / 0.35);
-  border-radius: 999px;
+  background-color: rgba(120, 90, 70, 0.35);
+  border-radius: var(--radius);
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 *::-webkit-scrollbar-thumb:hover {
-  background-color: rgb(148 163 184 / 0.55);
+  background-color: rgba(120, 90, 70, 0.55);
 }
 
 /* -------------------------------------------------------
    Reusable Utilities
 --------------------------------------------------------*/
 .text-gradient {
-  background-image: linear-gradient(135deg, #38bdf8, #a78bfa);
+  background-image: linear-gradient(135deg, #8b5e3c, #6d4a2e);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
 .hr {
-  @apply border-t border-white/10 my-6;
+  border-top: 1px solid #785a46;
+  margin: 1.5rem 0;
 }
 
 /* -------------------------------------------------------
    Badges
 --------------------------------------------------------*/
 .badge {
-  @apply inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium;
-  backdrop-filter: blur(6px);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: var(--radius);
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 .badge--ok {
-  @apply bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/30;
+  background-color: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+  border: 1px solid rgba(34, 197, 94, 0.3);
 }
 .badge--warn {
-  @apply bg-amber-500/10 text-amber-300 ring-1 ring-amber-500/30;
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.3);
 }
 .badge--err {
-  @apply bg-rose-500/10 text-rose-300 ring-1 ring-rose-500/30;
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 /* -------------------------------------------------------
    Buttons
 --------------------------------------------------------*/
 .btn {
-  @apply inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition-all disabled:opacity-60 disabled:cursor-not-allowed;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .btn-primary {
-  @apply text-white bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 focus-visible:ring-2 focus-visible:ring-sky-500/50;
+  background-color: #141414;
+  color: #ffffff;
+  border: none;
+}
+.btn-primary:hover:not(:disabled) {
+  background-color: #2a2a2a;
 }
 
 .btn-secondary {
-  @apply text-slate-200 border border-white/10 bg-slate-800 hover:bg-slate-700;
+  background-color: #faf7f5;
+  color: #141414;
+  border: 1px solid #785a46;
+}
+.btn-secondary:hover:not(:disabled) {
+  background-color: #f5f2f0;
 }
 
 .btn-success {
-  @apply text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500;
+  background-color: #8b5e3c;
+  color: #ffffff;
+  border: none;
+}
+.btn-success:hover:not(:disabled) {
+  background-color: #6d4a2e;
 }
 
 /* -------------------------------------------------------
@@ -191,14 +226,25 @@ pre, code, kbd, samp {
 }
 
 pre {
-  @apply rounded-xl border border-white/10 bg-slate-950/90 p-4 text-sm overflow-auto;
+  border-radius: var(--radius);
+  border: 1px solid #785a46;
+  background-color: #faf7f5;
+  padding: 1rem;
+  font-size: 0.875rem;
+  overflow: auto;
+  color: #141414;
 }
 
 /* -------------------------------------------------------
    Footer
 --------------------------------------------------------*/
 .footer {
-  @apply border-t border-white/10 bg-slate-950/70 backdrop-blur-sm text-center text-xs text-slate-400 py-6;
+  border-top: 1px solid #785a46;
+  background-color: #faf7f5;
+  text-align: center;
+  font-size: 0.75rem;
+  color: #6d4a2e;
+  padding: 1.5rem;
 }
 /* -------------------------------------------------------
    Markdown Editor + PDF Preview (Responsive Layout)
@@ -229,13 +275,32 @@ pre {
 
 /* Markdown textarea styling */
 .editor-textarea {
-  @apply flex-1 resize-none font-mono text-sm bg-slate-800 text-slate-100 border border-white/10 rounded-lg p-3 
-         focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-slate-900;
+  flex: 1;
+  resize: none;
+  font-family: ui-monospace, monospace;
+  font-size: 0.875rem;
+  background-color: #faf7f5;
+  color: #141414;
+  border: 1px solid #785a46;
+  border-radius: var(--radius);
+  padding: 0.75rem;
+}
+.editor-textarea:focus {
+  outline: none;
+  border-color: #8b5e3c;
+  box-shadow: 0 0 0 3px rgba(139, 94, 60, 0.1);
 }
 
 /* Live PDF preview styling */
 .pdf-preview {
-  @apply flex-1 overflow-auto bg-white border border-gray-300 rounded-lg p-4 shadow-inner text-black;
+  flex: 1;
+  overflow: auto;
+  background-color: #ffffff;
+  border: 1px solid #785a46;
+  border-radius: var(--radius);
+  padding: 1rem;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  color: #141414;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
 }
@@ -243,23 +308,70 @@ pre {
 /* Markdown typography inside the preview */
 .pdf-preview .prose {
   max-width: none;
-  color: #000;
+  color: #141414;
 }
 
 .pdf-preview .prose h1,
 .pdf-preview .prose h2,
 .pdf-preview .prose h3 {
-  color: #000;
+  color: #141414;
 }
 
 .pdf-preview .prose code {
-  background: #f3f4f6;
-  color: #1f2937;
+  background: #faf7f5;
+  color: #8b5e3c;
   padding: 0.15rem 0.35rem;
   border-radius: 0.25rem;
 }
 
 /* Download button */
 .download-btn {
-  @apply btn-primary mt-3 w-fit;
+  margin-top: 0.75rem;
+  width: fit-content;
+}
+
+/* Live progress bar */
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background-color: #faf7f5;
+  border-radius: var(--radius);
+  border: 1px solid #785a46;
+  overflow: hidden;
+  margin: 1rem 0;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #8b5e3c, #6d4a2e);
+  transition: width 0.3s ease;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.8;
+  }
+}
+
+/* Streaming text container */
+.streaming-text {
+  border-radius: var(--radius);
+  border: 1px solid #785a46;
+  background-color: #faf7f5;
+  padding: 1rem;
+  margin: 1rem 0;
+  font-family: ui-monospace, monospace;
+  font-size: 0.875rem;
+  color: #141414;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  max-height: 400px;
+  overflow-y: auto;
 }

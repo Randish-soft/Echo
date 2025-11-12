@@ -4,6 +4,7 @@ import { useState } from "react";
 import RepoAdder from "./components/RepoAdder";
 import RepoSelector from "./components/RepoSelector";
 import DocGenerator from "./components/DocGenerator";
+import SystemInfo from "./components/SystemInfo";
 
 export default function HomePage() {
   const [step, setStep] = useState(1);
@@ -15,17 +16,28 @@ export default function HomePage() {
     <main className="min-h-screen bg-white text-gray-900">
       <div className="max-w-3xl mx-auto px-4 py-10">
         <header className="mb-8">
-          <h1 className="text-3xl font-bold">Echo</h1>
-          <p className="text-sm text-gray-600">
+          <h1 className="text-3xl font-bold text-stone-900">Echo</h1>
+          <p className="text-sm text-stone-600">
             Transform your GitHub repository into comprehensive documentation in seconds.
           </p>
         </header>
 
+        {/* System Info */}
+        <div className="mb-6">
+          <SystemInfo />
+        </div>
+
         {/* Stepper */}
         <ol className="mb-6 flex gap-4 text-sm">
-          <li className={`px-2 py-1 rounded ${step === 1 ? "bg-gray-900 text-white" : "bg-gray-100"}`}>1. Add Repository</li>
-          <li className={`px-2 py-1 rounded ${step === 2 ? "bg-gray-900 text-white" : "bg-gray-100"}`}>2. Select Repository</li>
-          <li className={`px-2 py-1 rounded ${step === 3 ? "bg-gray-900 text-white" : "bg-gray-100"}`}>3. Generate Documentation</li>
+          <li className={`px-4 py-2 ${step === 1 ? "bg-black text-white" : "bg-stone-100 text-stone-700 border border-stone-300"}`} style={{borderRadius: '15px'}}>
+            1. Add Repository
+          </li>
+          <li className={`px-4 py-2 ${step === 2 ? "bg-black text-white" : "bg-stone-100 text-stone-700 border border-stone-300"}`} style={{borderRadius: '15px'}}>
+            2. Select Repository
+          </li>
+          <li className={`px-4 py-2 ${step === 3 ? "bg-black text-white" : "bg-stone-100 text-stone-700 border border-stone-300"}`} style={{borderRadius: '15px'}}>
+            3. Generate Documentation
+          </li>
         </ol>
 
         {step === 1 && (
@@ -61,7 +73,7 @@ export default function HomePage() {
           />
         )}
 
-        <footer className="mt-10 text-xs text-gray-500">
+        <footer className="mt-10 text-xs text-stone-500">
           Echo • Built with ❤️ by Randish
         </footer>
       </div>

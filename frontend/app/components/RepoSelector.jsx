@@ -70,12 +70,13 @@ export default function RepoSelector({
     <section className="space-y-6">
       <header className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold">2. Select Repository</h2>
-          <p className="text-sm text-gray-600">Choose a repository to generate documentation for.</p>
+          <h2 className="text-xl font-semibold text-stone-900">2. Select Repository</h2>
+          <p className="text-sm text-stone-600">Choose a repository to generate documentation for.</p>
         </div>
         <button
           onClick={() => loadRepos()}
-          className="rounded-lg border px-3 py-1 text-sm"
+          className="border border-stone-300 bg-white text-stone-700 px-4 py-1.5 text-sm hover:bg-stone-50 transition-colors"
+          style={{borderRadius: '15px'}}
           disabled={loading}
         >
           {loading ? "Refreshing…" : "Refresh"}
@@ -84,35 +85,37 @@ export default function RepoSelector({
 
       {banner && (
         <div
-          className={`rounded-lg p-3 text-sm border ${
+          className={`p-3 text-sm border ${
             banner.type === "error"
-              ? "bg-red-50 text-red-700 border-red-200"
+              ? "bg-red-50 text-red-700 border-red-300"
               : banner.type === "success"
-              ? "bg-green-50 text-green-700 border-green-200"
-              : "bg-blue-50 text-blue-700 border-blue-200"
+              ? "bg-green-50 text-green-700 border-green-300"
+              : "bg-blue-50 text-blue-700 border-blue-300"
           }`}
+          style={{borderRadius: '15px'}}
         >
           {banner.msg}
         </div>
       )}
 
       {repos.length === 0 ? (
-        <div className="rounded-lg border p-4 text-sm text-gray-600">
+        <div className="border border-stone-300 bg-stone-50 p-4 text-sm text-stone-600" style={{borderRadius: '15px'}}>
           No repositories found yet. Add one in Step 1, then click Refresh.
         </div>
       ) : (
         <ul className="space-y-2">
           {repos.map((rid) => (
             <li key={rid}>
-              <label className="flex items-center gap-3 rounded-lg border p-3">
+              <label className="flex items-center gap-3 border border-stone-300 p-3 cursor-pointer hover:bg-stone-50 transition-colors" style={{borderRadius: '15px'}}>
                 <input
                   type="radio"
                   name="repo"
                   value={rid}
                   checked={selectedRepoId === rid}
                   onChange={() => handlePick(rid)}
+                  className="accent-stone-800"
                 />
-                <span className="text-sm">{rid}</span>
+                <span className="text-sm text-stone-900">{rid}</span>
               </label>
             </li>
           ))}
@@ -121,7 +124,12 @@ export default function RepoSelector({
 
       <div className="flex gap-3 pt-2">
         {typeof onBack === "function" && (
-          <button type="button" onClick={onBack} className="rounded-lg border px-4 py-2">
+          <button
+            type="button"
+            onClick={onBack}
+            className="border border-stone-300 bg-white text-stone-700 px-6 py-2.5 hover:bg-stone-50 transition-colors"
+            style={{borderRadius: '15px'}}
+          >
             Back
           </button>
         )}
@@ -129,7 +137,8 @@ export default function RepoSelector({
           type="button"
           onClick={handleContinue}
           disabled={!selectedRepoId}
-          className="rounded-lg bg-black text-white px-4 py-2 disabled:opacity-60"
+          className="bg-black text-white px-6 py-2.5 disabled:opacity-60 disabled:cursor-not-allowed hover:bg-stone-800 transition-colors"
+          style={{borderRadius: '15px'}}
         >
           Continue
         </button>
